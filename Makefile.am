@@ -7,7 +7,7 @@ print-%:
 	@echo $* = $($*)
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
-SUBDIRS = crypto/argon2 src
+SUBDIRS = src/crypto/argon2 src
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
