@@ -1,13 +1,16 @@
 --- a/boost/thread/pthread/thread_data.hpp
 +++ b/boost/thread/pthread/thread_data.hpp
-@@ -57,6 +57,10 @@
- // Note that this is not always a constant expression, hence the need to test it at runtime as well.
- #ifdef PTHREAD_STACK_MIN
+@@ -171,6 +171,10 @@
+ #ifdef BOOST_THREAD_USES_GETPAGESIZE
+           std::size_t page_size = getpagesize();
+ #else
+           std::size_t page_size = ::sysconf( _SC_PAGESIZE);
+ #endif
 +
 +// RinCoin fix: ensure PTHREAD_STACK_MIN is defined to avoid concept check failures
 +#undef PTHREAD_STACK_MIN
 +#define PTHREAD_STACK_MIN 16384
 +
  #if PTHREAD_STACK_MIN > 0
-     static const std::size_t min_stacksize = PTHREAD_STACK_MIN;
- #else
+           if (size < PTHREAD_STACK_MIN) size = PTHREAD_STACK_MIN;
+ #endif
