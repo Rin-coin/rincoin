@@ -8,7 +8,7 @@ print-%:
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 SUBDIRS = src
-SUBDIRS += src/crypto/argon2
+SUBDIRS += crypto/argon2
 if ENABLE_MAN
 SUBDIRS += doc/man
 endif
