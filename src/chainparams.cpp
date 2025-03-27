@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2020 The Bitcoin Core developers
+// Copyright (c) 2024-2025 The Rincoin developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -126,7 +127,7 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        //vSeeds.emplace_back("seed.rin.so");
+        vSeeds.emplace_back("seed.rin.so");
 
         base58Prefixes[PUBKEY_ADDRESS] = {60};
         base58Prefixes[SCRIPT_ADDRESS] = {122};
@@ -138,7 +139,8 @@ public:
         bech32_hrp = "rin";
         mweb_hrp = "rinmweb";
 
-        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
+        //vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
+        vFixedSeeds.insert(vFixedSeeds.end(), std::begin(pnSeed6_main), std::end(pnSeed6_main));
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
