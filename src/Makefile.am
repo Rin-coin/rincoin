@@ -465,7 +465,7 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/argon2/src/encoding.c \
   crypto/argon2/src/hash.c \
   crypto/argon2/src/argon2.c \
-  crypto/argon2/src/ref.c
+  crypto/argon2/src/ref.c \
   crypto/chacha_poly_aead.h \
   crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
