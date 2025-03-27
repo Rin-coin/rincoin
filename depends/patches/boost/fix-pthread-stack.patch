@@ -1,14 +1,13 @@
 --- a/boost/thread/pthread/thread_data.hpp
 +++ b/boost/thread/pthread/thread_data.hpp
-@@ -57,7 +57,9 @@
+@@ -57,6 +57,10 @@
  // Note that this is not always a constant expression, hence the need to test it at runtime as well.
  #ifdef PTHREAD_STACK_MIN
--#if PTHREAD_STACK_MIN > 0
-+#if defined(PTHREAD_STACK_MIN) && PTHREAD_STACK_MIN > 0
++
++// RinCoin fix: ensure PTHREAD_STACK_MIN is defined correctly to avoid Boost concept errors
++#undef PTHREAD_STACK_MIN
++#define PTHREAD_STACK_MIN 16384
++
+ #if PTHREAD_STACK_MIN > 0
      static const std::size_t min_stacksize = PTHREAD_STACK_MIN;
  #else
-     static const std::size_t min_stacksize = 0;
- #endif
-+#else
-+    static const std::size_t min_stacksize = 0;
- #endif
