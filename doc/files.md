@@ -26,7 +26,7 @@ The data directory is the default location where the Litecoin Core files are sto
 
 Platform | Data directory path
 ---------|--------------------
-Linux    | `$HOME/.litecoin/`
+Linux    | `$HOME/.rincoin/`
 macOS    | `$HOME/Library/Application Support/Litecoin/`
 Windows  | `%APPDATA%\Litecoin\` <sup>[\[1\]](#note1)</sup>
 
