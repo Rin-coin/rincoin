@@ -139,14 +139,7 @@ public:
         bech32_hrp = "rin";
         mweb_hrp = "rinmweb";
 
-        //vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
-        for (unsigned int i = 0; i < ARRAYLEN(pnSeed6_main); ++i) {
-    struct in6_addr ip;
-    memcpy(&ip, pnSeed6_main[i].addr, sizeof(ip));
-    CAddress addr(CService(ip, pnSeed6_main[i].port));
-    addr.nTime = GetTime() - GetRand(ONE_WEEK) - ONE_WEEK;
-    vFixedSeeds.push_back(addr);
-}
+        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
         fDefaultConsistencyChecks = false;
         fRequireStandard = true;
         m_is_test_chain = false;
