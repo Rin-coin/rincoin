@@ -4,7 +4,7 @@
  // Note that this is not always a constant expression, hence the need to test it at runtime as well.
  #ifdef PTHREAD_STACK_MIN
 +
-+// RinCoin fix: ensure PTHREAD_STACK_MIN is defined correctly to avoid Boost concept errors
++// RinCoin fix: ensure PTHREAD_STACK_MIN is defined to avoid concept check failures
 +#undef PTHREAD_STACK_MIN
 +#define PTHREAD_STACK_MIN 16384
 +
