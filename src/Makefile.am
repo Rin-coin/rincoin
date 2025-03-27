@@ -491,7 +491,7 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/siphash.h \
   libmw/src/crypto/Hasher.cpp
 
-libbitcoin_crypto_base_a_LIBADD = crypto/argon2/src/libargon2.a
+crypto_libbitcoin_crypto_base_a_LIBADD = crypto/argon2/src/libargon2.a
 
 if USE_ASM
 crypto_libbitcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
