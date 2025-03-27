@@ -250,10 +250,10 @@
 #define PACKAGE_BUGREPORT "https://github.com/litecoin-project/litecoin/issues"
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "Litecoin Core"
+#define PACKAGE_NAME "Rincoin Core"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "Litecoin Core 0.21.3"
+#define PACKAGE_STRING "Rincoin Core 0.21.3"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "litecoin"
