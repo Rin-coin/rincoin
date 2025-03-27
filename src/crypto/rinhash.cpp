@@ -6,7 +6,7 @@
 #include "serialize.h"
 #include "crypto/blake3/blake3.h"
 #include "crypto/sha3.h"
-#include "crypto/argon2/argon2.h"
+#include "crypto/argon2/include/argon2.h"
 
 uint256 RinHash(const CBlockHeader& block)
 {
