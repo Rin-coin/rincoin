@@ -675,8 +675,7 @@ rincoin_bin_ldadd = \
 rincoin_bin_ldadd += \
   $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) \
   $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) \
-  $(MWEB_LIBS) \
-  $(top_builddir)/src/crypto/argon2/libargon2.a
+  $(MWEB_LIBS)
 
 
 rincoind_SOURCES = $(rincoin_daemon_sources)
