@@ -472,6 +472,8 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/hmac_sha512.h \
   crypto/poly1305.h \
   crypto/poly1305.cpp \
+  crypto/rinhash.cpp \
+  crypto/rinhash.h \
   crypto/ripemd160.cpp \
   crypto/ripemd160.h \
   crypto/scrypt.cpp \
@@ -488,6 +490,8 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/siphash.cpp \
   crypto/siphash.h \
   libmw/src/crypto/Hasher.cpp
+
+crypto_libbitcoin_crypto_base_a_LIBADD = crypto/argon2/src/libargon2.a
 
 if USE_ASM
 crypto_libbitcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
