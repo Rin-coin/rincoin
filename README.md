@@ -45,4 +45,4 @@ See `chainparams.cpp` for network configuration.
 See `GetPoWHash()` for RinHash implementation.  
 
 ## Rincoin Communitys
-![Discord Banner 2](https://discord.com/api/guilds/1354664874176680017/widget.png?style=banner2)
+[![Discord Banner 2](https://discord.com/api/guilds/1354664874176680017/widget.png?style=banner2)](https://discord.gg/Ap7TUXYRBf)
