@@ -1375,7 +1375,7 @@ if test "x$pkg_openssl" = xyes; then
   PKG_CHECK_MODULES([CRYPTO], [libcrypto],,[AC_MSG_ERROR(libcrypto not found.)])
 else
   AC_CHECK_HEADER([openssl/crypto.h],,AC_MSG_ERROR(libcrypto headers missing))
-  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS="-lcrypto $top_builddir/src/crypto/argon2/libargon2.a", AC_MSG_ERROR(libcrypto missing))
+  AC_CHECK_LIB([crypto],      [main],CRYPTO_LIBS="-lcrypto $srcdir/src/crypto/argon2/libargon2.a", AC_MSG_ERROR(libcrypto missing))
   AC_CHECK_HEADER([openssl/ssl.h],, AC_MSG_ERROR(libssl headers missing),)
   AC_CHECK_LIB([ssl],         [main],SSL_LIBS=-lssl, AC_MSG_ERROR(libssl missing))
 fi
