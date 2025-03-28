@@ -672,7 +672,12 @@ rincoin_bin_ldadd = \
   $(LIBSECP256K1) \
   $(LIBMW)
 
-rincoin_bin_ldadd += $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) $(MWEB_LIBS)
+rincoin_bin_ldadd += \
+  $(BOOST_LIBS) $(BDB_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) \
+  $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(SQLITE_LIBS) \
+  $(MWEB_LIBS) \
+  $(top_builddir)/src/crypto/argon2/libargon2.a
+
 
 rincoind_SOURCES = $(rincoin_daemon_sources)
 rincoind_CPPFLAGS = $(rincoin_bin_cppflags)
