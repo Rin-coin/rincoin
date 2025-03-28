@@ -459,6 +459,7 @@ crypto_libbitcoin_crypto_base_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/aes.cpp \
   crypto/aes.h \
+  crypto/argon2/include/argon2.h \
   crypto/chacha_poly_aead.h \
   crypto/chacha_poly_aead.cpp \
   crypto/chacha20.h \
@@ -491,7 +492,7 @@ crypto_libbitcoin_crypto_base_a_SOURCES = \
   crypto/siphash.h \
   libmw/src/crypto/Hasher.cpp
 
-crypto_libbitcoin_crypto_base_a_LIBADD = crypto/argon2/libargon2.a
+crypto_libbitcoin_crypto_base_a_LIBADD = $(builddir)/crypto/argon2/libargon2.a
 
 if USE_ASM
 crypto_libbitcoin_crypto_base_a_SOURCES += crypto/sha256_sse4.cpp
