@@ -4,7 +4,6 @@ libargon2_a_SOURCES = \
     core.c \
     blake2/blake2b.c \
     encoding.c \
-    hash.c \
     argon2.c \
     ref.c
 
