@@ -5,6 +5,7 @@ libargon2_a_SOURCES = \
     blake2/blake2b.c \
     encoding.c \
     argon2.c \
-    ref.c
+    ref.c \
+    thread.c
 
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/blake2
