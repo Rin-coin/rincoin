@@ -101,7 +101,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2427264; // 364 days later
 
         consensus.nMinimumChainWork = uint256S("0x00");
-        consensus.defaultAssumeValid = uint256S("0xc93937b9649bf1ef4f09f1ac835bba3563e016fda7425ad8b47d5a0bc2d80000");
+        consensus.defaultAssumeValid = uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624");
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -119,8 +119,8 @@ public:
 
         genesis = CreateGenesisBlock(1743054848, 49140, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xc93937b9649bf1ef4f09f1ac835bba3563e016fda7425ad8b47d5a0bc2d80000"));
-        assert(genesis.hashMerkleRoot == uint256S("0x25700cfffb18d376a0ecfa4d9786cacbf856b767fb3630a04f654f48d112093d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624"));
+        assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
         
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -147,7 +147,7 @@ public:
 
         checkpointData = {
             {
-
+                {0, uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624")}
             }
         };
 
@@ -200,7 +200,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2419200; // 364 days later
 
         consensus.nMinimumChainWork = uint256S("0x00");
-        consensus.defaultAssumeValid = uint256S("0xc93937b9649bf1ef4f09f1ac835bba3563e016fda7425ad8b47d5a0bc2d80000");
+        consensus.defaultAssumeValid = uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624");
 
         pchMessageStart[0] = 0x72; // 'r'
         pchMessageStart[1] = 0x69; // 'i'
@@ -213,8 +213,8 @@ public:
 
         genesis = CreateGenesisBlock(1743054848, 49140, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0xc93937b9649bf1ef4f09f1ac835bba3563e016fda7425ad8b47d5a0bc2d80000"));
-        assert(genesis.hashMerkleRoot == uint256S("0x25700cfffb18d376a0ecfa4d9786cacbf856b767fb3630a04f654f48d112093d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624"));
+        assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -239,7 +239,7 @@ public:
 
         checkpointData = {
             {
-
+                {0, uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624")}
             }
         };
 
@@ -306,8 +306,8 @@ public:
 
         genesis = CreateGenesisBlock(1743054031, 0, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x443d3e195f23f65360bd8e1657e5e1a7d9184d72e88b35b0b3263d0b336e0323"));
-        assert(genesis.hashMerkleRoot == uint256S("0x25700cfffb18d376a0ecfa4d9786cacbf856b767fb3630a04f654f48d112093d"));
+        assert(consensus.hashGenesisBlock == uint256S("0x74fd838900f0867f5ccfa3dbdc289bc27a9fcca832f0726e21d2b2a3f3e5748b"));
+        assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
 
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
@@ -319,7 +319,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("530827f38f93b43ed12af0b3ad25a288dc02ed74d6d7857862df51fc56c416f9")},
+                {0, uint256S("0x74fd838900f0867f5ccfa3dbdc289bc27a9fcca832f0726e21d2b2a3f3e5748b")},
             }
         };
 
