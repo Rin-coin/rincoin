@@ -8,4 +8,5 @@ libargon2_a_SOURCES = \
     ref.c \
     thread.c
 
+AM_CFLAGS = -O2 -fPIC
 AM_CPPFLAGS = -I$(srcdir)/include -I$(srcdir)/blake2
