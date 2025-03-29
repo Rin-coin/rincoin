@@ -22,14 +22,15 @@ uint256 RinHash(const CBlockHeader& block)
     blake3_hasher_update(&blake_hasher, input.data(), input.size());
     blake3_hasher_finalize(&blake_hasher, blake3_out, 32);
 
+    const char* salt_str = "RinCoinSalt";
     uint8_t argon2_out[32];
     argon2_context context = {};
     context.out = argon2_out;
     context.outlen = 32;
     context.pwd = blake3_out;
     context.pwdlen = 32;
-    context.salt = blake3_out;
-    context.saltlen = 32;
+    context.salt = (uint8_t*)salt_str;
+    context.saltlen = strlen(salt_str);
     context.t_cost = 2;
     context.m_cost = 64;
     context.lanes = 1;
