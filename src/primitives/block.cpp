@@ -13,7 +13,7 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return SerializeHash(*this);
+    return RinHash(*this);
 }
 
 uint256 CBlockHeader::GetPoWHash() const

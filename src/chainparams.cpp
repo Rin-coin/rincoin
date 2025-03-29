@@ -19,6 +19,11 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+#include <arith_uint256.h>
+#include <util/system.h>  // for LogPrintf, if you want
+#include <consensus/params.h>  // for Consensus::Params
+#include "crypto/rinhash.h"  // RinHashの場所に応じてパス変更
+
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
     CMutableTransaction txNew;
@@ -117,10 +122,12 @@ public:
         m_assumed_blockchain_size = 40;
         m_assumed_chain_state_size = 2;
 
-        genesis = CreateGenesisBlock(1743054848, 49140, 0x1f00ffff, 1, 50 * COIN);
+        // CreateGenesisBlock(nTime, nNonce, nBits, nVersion, reward)
+        genesis = CreateGenesisBlock(1743054848, 34088, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db"));
         assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
+
         
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
@@ -147,7 +154,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624")}
+                {0, uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db")}
             }
         };
 
@@ -200,7 +207,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2419200; // 364 days later
 
         consensus.nMinimumChainWork = uint256S("0x00");
-        consensus.defaultAssumeValid = uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624");
+        consensus.defaultAssumeValid = uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db");
 
         pchMessageStart[0] = 0x72; // 'r'
         pchMessageStart[1] = 0x69; // 'i'
@@ -211,9 +218,9 @@ public:
         m_assumed_blockchain_size = 4;
         m_assumed_chain_state_size = 1;
 
-        genesis = CreateGenesisBlock(1743054848, 49140, 0x1f00ffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1743054848, 34088, 0x1f00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624"));
+        assert(consensus.hashGenesisBlock == uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db"));
         assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
 
         vFixedSeeds.clear();
@@ -239,7 +246,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x87d5182e45e656e137e8bccd0c6224cf029a494319832c98de8ebeff3adf5624")}
+                {0, uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db")}
             }
         };
 
@@ -304,11 +311,11 @@ public:
 
         UpdateActivationParametersFromArgs(args);
 
-        genesis = CreateGenesisBlock(1743054031, 0, 0x207fffff, 1, 50 * COIN);
+        genesis = CreateGenesisBlock(1743054848, 0, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x74fd838900f0867f5ccfa3dbdc289bc27a9fcca832f0726e21d2b2a3f3e5748b"));
-        assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
-
+        assert(consensus.hashGenesisBlock == uint256S("18495754fab5353ade323ba86bf000367df7c61a8520f7be621765cca24a3894"));
+        assert(genesis.hashMerkleRoot == uint256S("8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
+        
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
@@ -319,7 +326,7 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x74fd838900f0867f5ccfa3dbdc289bc27a9fcca832f0726e21d2b2a3f3e5748b")},
+                {0, uint256S("0x18495754fab5353ade323ba86bf000367df7c61a8520f7be621765cca24a3894")},
             }
         };
 
