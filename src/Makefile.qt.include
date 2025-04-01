@@ -2,10 +2,10 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/litecoin-qt
+bin_PROGRAMS += qt/rincoin-qt
 
 if BUILD_BITCOIN_GUI
-  bin_PROGRAMS += litecoin-gui
+  bin_PROGRAMS += rincoin-gui
 endif
 
 EXTRA_LIBRARIES += qt/libbitcoinqt.a

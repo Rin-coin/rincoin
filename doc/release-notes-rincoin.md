@@ -1,12 +1,12 @@
-Litecoin Core version 0.21.4 is now available from:
+Rincoin Core version 0.21.4 is now available from:
 
- <https://download.litecoin.org/litecoin-0.21.4/>.
+ <https://download.rin.so/rincoin-0.21.4/>
 
 This is a new patch version release that includes, new features and important security updates.
 
 Please report bugs using the issue tracker at GitHub:
 
-  <https://github.com/litecoin-project/litecoin/issues>
+  <https://github.com/rincoin/rincoin/issues>
 
 Notable changes
 ===============
@@ -44,6 +44,4 @@ Credits
 Thanks to everyone who directly contributed to this release:
 
 - [The Bitcoin Core Developers](https://github.com/bitcoin/bitcoin/)
-- [David Burkett](https://github.com/DavidBurkett/)
-- [Hector Chu](https://github.com/hectorchu)
-- [Loshan](https://github.com/losh11)
+- [The Rincoin Core Developers](https://github.com/rincoin/rincoin/)
