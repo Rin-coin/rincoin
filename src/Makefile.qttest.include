@@ -2,7 +2,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/test/test_litecoin-qt
+bin_PROGRAMS += qt/test/test_rincoin-qt
 TESTS += qt/test/test_rincoin-qt
 
 TEST_QT_MOC_CPP = \
