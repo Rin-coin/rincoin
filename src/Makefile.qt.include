@@ -329,14 +329,14 @@ litecoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 qt_litecoin_qt_CPPFLAGS = $(litecoin_qt_cppflags)
 qt_litecoin_qt_CXXFLAGS = $(litecoin_qt_cxxflags)
 qt_rincoin_qt_SOURCES = $(litecoin_qt_sources)
-qt_litecoin_qt_LDADD = $(litecoin_qt_ldadd)
+qt_rinoin_qt_LDADD = $(litecoin_qt_ldadd)
 qt_rincoin_qt_LDFLAGS = $(rincoin_qt_LDFLAGS)
 qt_litecoin_qt_LIBTOOLFLAGS = $(litecoin_qt_libtoolflags)
 
 litecoin_gui_CPPFLAGS = $(litecoin_qt_cppflags)
 litecoin_gui_CXXFLAGS = $(litecoin_qt_cxxflags)
 rincoin_gui_SOURCES = $(litecoin_qt_sources)
-litecoin_gui_LDADD = $(litecoin_qt_ldadd)
+rincoin_gui_LDADD = $(litecoin_qt_ldadd)
 litecoin_gui_LDFLAGS = $(rincoin_qt_LDFLAGS)
 litecoin_gui_LIBTOOLFLAGS = $(litecoin_qt_libtoolflags)
 
