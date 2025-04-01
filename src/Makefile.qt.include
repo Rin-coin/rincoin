@@ -329,7 +329,7 @@ rincoin_qt_libtoolflags = $(AM_LIBTOOLFLAGS) --tag CXX
 qt_rincoin_qt_CPPFLAGS = $(rincoin_qt_cppflags)
 qt_rincoin_qt_CXXFLAGS = $(rincoin_qt_cxxflags)
 qt_rincoin_qt_SOURCES = $(rincoin_qt_sources)
-qt_rinoin_qt_LDADD = $(rincoin_qt_ldadd)
+qt_rincoin_qt_LDADD = $(rincoin_qt_ldadd)
 qt_rincoin_qt_LDFLAGS = $(rincoin_qt_LDFLAGS)
 qt_rincoin_qt_LIBTOOLFLAGS = $(rincoin_qt_libtoolflags)
 
