@@ -10,7 +10,6 @@ RinCoin is a decentralized digital currency, based on Bitcoin Core, that introdu
 - **Block Target Time:** 1 minute (60 seconds per block)  
 - **Block Reward:** 50 RIN (initial coinbase reward per block)  
 - **Halving Schedule:** Reward halves every 210,000 blocks (~145 days at 1 min blocks)  
-- **Max Supply:** 168,000,000 RIN
 - **Difficulty Adjustment:** Every 2016 blocks (~33.6 hours)  
 - **Proof-of-Work Hash:** 256-bit output  
 - **Address Format:** Base58 addresses start with **R**  
