@@ -11,14 +11,26 @@
 #include <crypto/common.h>
 #include "crypto/rinhash.h"
 
+
+
 uint256 CBlockHeader::GetHash() const
 {
-    return RinHash(*this);
+    return RinHash(*this, 64);
 }
 
 uint256 CBlockHeader::GetPoWHash() const
 {
     return RinHash(*this);
+}
+
+uint256 CBlockHeader::GetNewPoWHash() const
+{
+    return RinHash(*this);
+}
+
+uint256 CBlockHeader::GetOldPoWHash() const
+{
+    return RinHash(*this, 64);
 }
 
 std::string CBlock::ToString() const

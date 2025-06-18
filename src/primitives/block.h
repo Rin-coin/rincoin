@@ -55,6 +55,12 @@ public:
 
     uint256 GetPoWHash() const;
 
+    uint256 GetNewPoWHash() const;
+
+    uint256 GetOldPoWHash() const;
+
+    int GetHeight() const;
+
     int64_t GetBlockTime() const
     {
         return (int64_t)nTime;

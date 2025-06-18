@@ -10,7 +10,7 @@
 #include <span.h> // MakeUCharSpan を使うなら必要
 #include <stdexcept>
 
-uint256 RinHash(const CBlockHeader& block)
+uint256 RinHash(const CBlockHeader& block, const int memory_cost)
 {
     CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << block;
@@ -32,7 +32,7 @@ uint256 RinHash(const CBlockHeader& block)
     context.salt = (uint8_t*)salt_str;
     context.saltlen = strlen(salt_str);
     context.t_cost = 2;
-    context.m_cost = 64;
+    context.m_cost = memory_cost;
     context.lanes = 1;
     context.threads = 1;
     context.version = ARGON2_VERSION_13;

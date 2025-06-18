@@ -7,6 +7,6 @@
 #include "uint256.h"
 #include "primitives/block.h"
 
-uint256 RinHash(const CBlockHeader& block);
+uint256 RinHash(const CBlockHeader& block, const int memory_cost = 256000);
 
 #endif // RINHASH_H
