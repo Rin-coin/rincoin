@@ -76,13 +76,13 @@ public:
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.BIP16Height = 26500; // 87afb798a3ad9378fcd56123c81fb31cfd9a8df4719b9774d71730c16315a092 - October 1, 2012
+        consensus.BIP16Height = 26500;
         consensus.BIP34Height = 26500;
-        consensus.BIP34Hash = uint256S("0x00");
-        consensus.BIP65Height = 26500; // bab3041e8977e0dc3eeff63fe707b92bde1dd449d8efafb248c27c8264cc311a
-        consensus.BIP66Height = 26500; // 7aceee012833fa8952f8835d8b1b3ae233cd6ab08fdb27a771d2bd7bdc491894
-        consensus.CSVHeight = 26500; // 53e0af7626f7f51ce9f3b6cfc36508a5b1d2f6c4a75ac215dc079442692a4c0b
-        consensus.SegwitHeight = 26500; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
+        consensus.BIP34Hash = uint256S("0x00000007fb317ed0d588b8ccdcc38b21d3bb2c8d5c037e51a1094fec89e70d96");
+        consensus.BIP65Height = 26500;
+        consensus.BIP66Height = 26500;
+        consensus.CSVHeight = 26500;
+        consensus.SegwitHeight = 26500;
         consensus.MinBIP9WarningHeight = 25000; // segwit activation height + miner confirmation window
         consensus.Mem64Height = 170000;
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
@@ -121,8 +121,8 @@ public:
         pchMessageStart[3] = 0x43;
         nDefaultPort = 9555;
         nPruneAfterHeight = 100000;
-        m_assumed_blockchain_size = 40;
-        m_assumed_chain_state_size = 2;
+        m_assumed_blockchain_size = 0;
+        m_assumed_chain_state_size = 0;
 
         // CreateGenesisBlock(nTime, nNonce, nBits, nVersion, reward)
         genesis = CreateGenesisBlock(1743054848, 34088, 0x1f00ffff, 1, 50 * COIN);
