@@ -288,8 +288,8 @@ static RPCHelpMan addnode()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("addnode", "\"192.168.0.6:9333\" \"onetry\"")
-            + HelpExampleRpc("addnode", "\"192.168.0.6:9333\", \"onetry\"")
+                    HelpExampleCli("addnode", "\"192.168.0.6:9555\" \"onetry\"")
+            + HelpExampleRpc("addnode", "\"192.168.0.6:9555\", \"onetry\"")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -345,8 +345,8 @@ static RPCHelpMan addconnection()
                 { RPCResult::Type::STR, "connection_type", "Type of connection opened." },
             }},
         RPCExamples{
-            HelpExampleCli("addconnection", "\"192.168.0.6:9333\" \"outbound-full-relay\"")
-            + HelpExampleRpc("addconnection", "\"192.168.0.6:9333\" \"outbound-full-relay\"")
+            HelpExampleCli("addconnection", "\"192.168.0.6:9555\" \"outbound-full-relay\"")
+            + HelpExampleRpc("addconnection", "\"192.168.0.6:9555\" \"outbound-full-relay\"")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {
@@ -397,9 +397,9 @@ static RPCHelpMan disconnectnode()
                 },
                 RPCResult{RPCResult::Type::NONE, "", ""},
                 RPCExamples{
-                    HelpExampleCli("disconnectnode", "\"192.168.0.6:9333\"")
+                    HelpExampleCli("disconnectnode", "\"192.168.0.6:9555\"")
             + HelpExampleCli("disconnectnode", "\"\" 1")
-            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:9333\"")
+            + HelpExampleRpc("disconnectnode", "\"192.168.0.6:9555\"")
             + HelpExampleRpc("disconnectnode", "\"\", 1")
                 },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
@@ -915,8 +915,8 @@ static RPCHelpMan addpeeraddress()
             },
         },
         RPCExamples{
-            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 9333")
-    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 9333")
+            HelpExampleCli("addpeeraddress", "\"1.2.3.4\" 9555")
+    + HelpExampleRpc("addpeeraddress", "\"1.2.3.4\", 9555")
         },
         [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
 {

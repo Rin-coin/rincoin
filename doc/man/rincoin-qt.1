@@ -190,7 +190,7 @@ Default duration (in seconds) of manually configured bans (default:
 Bind to given address and always listen on it (default: 0.0.0.0). Use
 [host]:port notation for IPv6. Append =onion to tag any incoming
 connections to that address and port as incoming Tor connections
-(default: 127.0.0.1:9333=onion, testnet: 127.0.0.1:19335=onion,
+(default: 127.0.0.1:9555=onion, testnet: 127.0.0.1:19335=onion,
 signet: 127.0.0.1:39335=onion, regtest: 127.0.0.1:19444=onion)
 .HP
 \fB\-connect=\fR<ip>
@@ -287,7 +287,7 @@ Relay non\-P2SH multisig (default: 1)
 \fB\-port=\fR<port>
 .IP
 Listen for connections on <port>. Nodes not using the default ports
-(default: 9333, testnet: 19335, signet: 19335, regtest: 19444)
+(default: 9555, testnet: 19335, signet: 19335, regtest: 19444)
 are unlikely to get incoming connections.
 .HP
 \fB\-proxy=\fR<ip:port>
@@ -667,7 +667,7 @@ Password for JSON\-RPC connections
 .HP
 \fB\-rpcport=\fR<port>
 .IP
-Listen for JSON\-RPC connections on <port> (default: 9332, testnet:
+Listen for JSON\-RPC connections on <port> (default: 9556, testnet:
 19332, signet: 39332, regtest: 19443)
 .HP
 \fB\-rpcserialversion\fR
