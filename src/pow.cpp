@@ -107,8 +107,13 @@ unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Par
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
-    if (pindexLast->nHeight + 1 >= params.DGWHeight)
+    if (pindexLast->nHeight < 100)
+        return UintToArith256(params.powLimit).GetCompact();
+
+    if ((uint32_t)(pindexLast->nHeight + 1) >= params.DGWHeight) {
         return DarkGravityWave(pindexLast, params);
+    } else {
+
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
 
     // Only change once per difficulty adjustment interval
@@ -148,6 +153,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     assert(pindexFirst);
 
     return CalculateNextWorkRequired(pindexLast, pindexFirst->GetBlockTime(), params);
+    }
 }
 
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params& params)

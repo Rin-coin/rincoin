@@ -22,22 +22,28 @@ CTxIn generatetoaddress(const NodeContext& node, const std::string& address)
 
     return MineBlock(node, coinbase_script);
 }
+static uint256 ComputeExpectedPoWHash(const CBlock& block, int height)
+{
+    if (height >= Params().GetConsensus().Mem64Height) {
+        return block.GetPoWHash();
+    } else {
+        return block.GetOldPoWHash();
+    }
+}
 
 CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
-    uint256 hash = uint256(0);
-    if (ChainActive().Height() >= Params().GetConsensus().Mem64Height) {
-        hash = block->GetPoWHash();
-    } else {
-        hash = block->GetOldPoWHash();
-    }
+    int nextHeight = ChainActive().Height() + 1;
+
+    uint256 hash = ComputeExpectedPoWHash(*block, nextHeight);
     while (!CheckProofOfWork(hash, block->nBits, Params().GetConsensus())) {
         ++block->nNonce;
         assert(block->nNonce);
+        hash = ComputeExpectedPoWHash(*block, nextHeight);
     }
 
-    bool processed{Assert(node.chainman)->ProcessNewBlock(Params(), block, true, nullptr)};
+    bool processed = Assert(node.chainman)->ProcessNewBlock(Params(), block, true, nullptr);
     assert(processed);
 
     return CTxIn{block->vtx[0]->GetHash(), 0};
