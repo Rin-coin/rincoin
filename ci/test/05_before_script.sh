@@ -8,7 +8,7 @@ export LC_ALL=C.UTF-8
 
 # Make sure default datadir does not exist and is never read by creating a dummy file
 if [ "$CI_OS_NAME" == "macos" ]; then
-  echo > $HOME/Library/Application\ Support/Litecoin
+  echo > $HOME/Library/Application\ Support/Rincoin
 else
   DOCKER_EXEC echo \> \$HOME/.rincoin
 fi

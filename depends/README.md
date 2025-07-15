@@ -124,7 +124,7 @@ from llvm.org. Clang 8 or later is required.</dd>
 </dl>
 
 If some packages are not built, for example `make NO_WALLET=1`, the appropriate
-options will be passed to litecoin's configure. In this case, `--disable-wallet`.
+options will be passed to rincoin's configure. In this case, `--disable-wallet`.
 
 ### Additional targets
 

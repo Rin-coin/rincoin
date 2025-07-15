@@ -152,7 +152,7 @@ def create_non_hd_wallet(chain, options):
     data_dir = get_datadir_path(options.tmpdir, 10)
 
     # adjust conf for pre 17
-    conf_file = os.path.join(data_dir, 'litecoin.conf')
+    conf_file = os.path.join(data_dir, 'rincoin.conf')
     with open(conf_file, 'r', encoding='utf8') as conf:
         conf_data = conf.read()
     with open(conf_file, 'w', encoding='utf8') as conf:
@@ -165,8 +165,8 @@ def create_non_hd_wallet(chain, options):
         rpchost=None,
         timewait=60,
         timeout_factor=1.0,
-        bitcoind=os.path.join(bin_dir, 'litecoind'),
-        bitcoin_cli=os.path.join(bin_dir, 'litecoin-cli'),
+        bitcoind=os.path.join(bin_dir, 'rincoind'),
+        bitcoin_cli=os.path.join(bin_dir, 'rincoin-cli'),
         version=version,
         coverage_dir=None,
         cwd=options.tmpdir,

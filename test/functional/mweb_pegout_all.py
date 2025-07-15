@@ -6,7 +6,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
-from test_framework.ltc_util import get_hog_addr_txout, setup_mweb_chain
+from test_framework.rin_util import get_hog_addr_txout, setup_mweb_chain
 
 class MWEBPegoutAllTest(BitcoinTestFramework):
     def set_test_params(self):

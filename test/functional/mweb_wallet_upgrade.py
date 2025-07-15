@@ -8,7 +8,7 @@ import os
 import shutil
 
 from test_framework.test_framework import BitcoinTestFramework
-from test_framework.ltc_util import create_non_hd_wallet, setup_mweb_chain
+from test_framework.rin_util import create_non_hd_wallet, setup_mweb_chain
 from test_framework.util import assert_equal
 
 class MWEBWalletUpgradeTest(BitcoinTestFramework):
@@ -33,7 +33,7 @@ class MWEBWalletUpgradeTest(BitcoinTestFramework):
         self.sync_all()
         
         #
-        # Create a non-HD wallet using an older litecoin core version
+        # Create a non-HD wallet using an older rincoin core version
         #
         self.log.info("Creating non-hd wallet")
         nonhd_wallet_dat = create_non_hd_wallet(self.chain, self.options)
