@@ -59,6 +59,8 @@ public:
 
     uint256 GetOldPoWHash() const;
 
+    uint256 Get256Hash() const;
+
     int GetHeight() const;
 
     int64_t GetBlockTime() const

@@ -27,7 +27,7 @@ CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
     uint256 hash = uint256(0);
-    if (ChainActive().Height() >= Params().GetConsensus().Mem256Height) {
+    if (ChainActive().Height() >= Params().GetConsensus().Mem64Height) {
         hash = block->GetPoWHash();
     } else {
         hash = block->GetOldPoWHash();

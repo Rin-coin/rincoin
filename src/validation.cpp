@@ -1191,10 +1191,10 @@ bool ReadBlockFromDisk(CBlock& block, const FlatFilePos& pos, const Consensus::P
 
     // Check the header
     if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
-        if (ChainActive().Height() >= consensusParams.Mem256Height) {
+        if (ChainActive().Height() >= consensusParams.Mem64Height) {
             return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
         } else {
-            if (!CheckProofOfWork(block.GetOldPoWHash(), block.nBits, consensusParams))
+            if (!CheckProofOfWork(block.GetOldPoWHash(), block.nBits, consensusParams) && !CheckProofOfWork(block.Get256Hash(), block.nBits, consensusParams))
                 return error("ReadBlockFromDisk: Errors in block header at %s", pos.ToString());
         }
 
@@ -3471,10 +3471,10 @@ static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& st
 {
     // Check proof of work matches claimed amount
     if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(), block.nBits, consensusParams))
-        if (ChainActive().Height() >= consensusParams.Mem256Height) {
+        if (ChainActive().Height() >= consensusParams.Mem64Height) {
             return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
         } else {
-            if (!CheckProofOfWork(block.GetOldPoWHash(), block.nBits, consensusParams))
+            if (!CheckProofOfWork(block.GetOldPoWHash(), block.nBits, consensusParams) && !CheckProofOfWork(block.Get256Hash(), block.nBits, consensusParams))
                 return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
         }
 

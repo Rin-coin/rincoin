@@ -116,7 +116,7 @@ static bool GenerateBlock(ChainstateManager& chainman, CBlock& block, uint64_t& 
 
     CChainParams chainparams(Params());
     uint256 hash = uint256(0);
-    if (::ChainActive().Height() >= chainparams.GetConsensus().Mem256Height) {
+    if (::ChainActive().Height() >= chainparams.GetConsensus().Mem64Height) {
         hash = block.GetPoWHash();
     } else {
         hash = block.GetOldPoWHash();
