@@ -14,6 +14,44 @@
 #include "chain.h"
 #include "consensus/params.h"
 #include "uint256.h"
+#include <arith_uint256.h>
+
+#include <util/system.h>
+#include <logging.h>
+
+extern CChain& ChainActive();
+
+std::string DetectCurrentDifficultyAlgo(const CBlockIndex* pindexLast, const Consensus::Params& params)
+{
+    if (!pindexLast) return "unknown";
+
+    unsigned int nextWorkRequired = GetNextWorkRequired(pindexLast, nullptr, params);
+
+    if (pindexLast->nHeight + 1 >= static_cast<int>(params.DGWHeight)) {
+        unsigned int dgw = DarkGravityWave(pindexLast, params);
+        if (abs((int)nextWorkRequired - (int)dgw) < 200) {
+            return "DarkGravityWave";
+        } else {
+            return "Unknown - DGW mismatch";
+        }
+    } else {
+        unsigned int legacy = CalculateNextWorkRequired(pindexLast, pindexLast->GetBlockTime(), params);
+        if (abs((int)nextWorkRequired - (int)legacy) < 200) {
+            return "legacy";
+        } else {
+            return "Unknown - legacy mismatch";
+        }
+    }
+}
+
+bool IsMem256ActiveAtTip()
+{
+    const CBlockIndex* tip = ::ChainActive().Tip();
+    if (!tip) return false;
+    const Consensus::Params& consensus = Params().GetConsensus();
+    return tip->nHeight >= consensus.Mem64Height;
+}
+
 
 unsigned int DarkGravityWave(const CBlockIndex* pindexLast, const Consensus::Params& params) {
     /* current difficulty formula, criptoreal - DarkGravity v3, written by Evan Duffield - evan@dash.io */

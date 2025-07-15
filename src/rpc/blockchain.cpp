@@ -36,6 +36,8 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+#include <logging.h>
+#include <pow.h>
 
 #include <stdint.h>
 
@@ -2644,6 +2646,89 @@ static RPCHelpMan dumptxoutset()
     };
 }
 
+static RPCHelpMan getdifficultyalgorithm()
+{
+    return RPCHelpMan{"getdifficultyalgorithm",
+                      "Returns the current difficulty adjustment algorithm used to calculate the next block difficulty.",
+                      {},
+                      RPCResult{RPCResult::Type::OBJ, "", "",
+                          {
+                              {RPCResult::Type::STR, "current_algorithm", "The active difficulty algorithm"}
+                          }},
+                      RPCExamples{
+                          HelpExampleCli("getdifficultyalgorithm", "")
+                          + HelpExampleRpc("getdifficultyalgorithm", "")
+                      },
+                      [](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue {
+                          LOCK(cs_main);
+
+                          //node::NodeContext& node = EnsureNodeContext(request.context);
+			  NodeContext& node = EnsureNodeContext(request.context);
+                          ChainstateManager& chainman = *node.chainman;
+                          const Consensus::Params& params = Params().GetConsensus();
+                          const CBlockIndex* pindexLast = chainman.ActiveChain().Tip();
+
+                          if (!pindexLast) {
+                              throw JSONRPCError(RPC_MISC_ERROR, "Chain tip not available");
+                          }
+
+                          unsigned int nextWorkRequired = GetNextWorkRequired(pindexLast, nullptr, params);
+                          std::string algorithm;
+
+                          //if (pindexLast->nHeight + 1 >= params.DGWHeight) {
+			  if (pindexLast->nHeight + 1 >= static_cast<int>(params.DGWHeight)) {
+                              unsigned int DGWWorkRequired = DarkGravityWave(pindexLast, params);
+                              LogPrintf("getdifficultyalgorithm: DGWWorkRequired = %u, nextWorkRequired = %u\n", DGWWorkRequired, nextWorkRequired);
+                              if (abs((int)nextWorkRequired - (int)DGWWorkRequired) < 200) {
+                                  algorithm = "DarkGravityWave";
+                              } else {
+                                  algorithm = "Unknown Algorithm - DarkGravityWave mismatch";
+                              }
+                          } else {
+                              unsigned int legacyWorkRequired = CalculateNextWorkRequired(pindexLast, pindexLast->GetBlockTime(), params);
+                              LogPrintf("getdifficultyalgorithm: legacyWorkRequired = %u, nextWorkRequired = %u\n", legacyWorkRequired, nextWorkRequired);
+                              if (abs((int)nextWorkRequired - (int)legacyWorkRequired) < 200) { // this is not accurate enough but is only temporary - as long as it works for DGW.
+                                  algorithm = "CalculateNextWorkRequired";
+                              } else {
+                                  algorithm = "Unknown Algorithm - Legacy mismatch";
+                              }
+                          }
+
+                          UniValue result(UniValue::VOBJ);
+                          result.pushKV("current_algorithm", algorithm);
+                          return result;
+                      }};
+}
+
+
+
+UniValue getpowmode(const JSONRPCRequest& request)
+{
+    LOCK(cs_main);
+
+    const CBlockIndex* tip = ::ChainActive().Tip();
+    const int height = tip ? tip->nHeight : 0;
+    const Consensus::Params& consensus = Params().GetConsensus();
+
+    UniValue result(UniValue::VOBJ);
+    result.pushKV("height", height);
+    result.pushKV("current_blockhash", tip ? tip->GetBlockHash().GetHex() : "");
+
+    bool isMem256 = IsMem256ActiveAtTip();
+    result.pushKV("pow", isMem256 ? "mem256" : "legacy");
+    result.pushKV("algo", "rinhash");
+    result.pushKV("mem256_enabled", isMem256);
+    result.pushKV("mem256_activation_height", consensus.Mem64Height);
+
+    // Dynamic difficulty algorithm detection
+    std::string algo = DetectCurrentDifficultyAlgo(tip, consensus);
+    result.pushKV("difficulty_algorithm", algo);
+
+    return result;
+}
+
+
+
 void RegisterBlockchainRPCCommands(CRPCTable &t)
 {
 // clang-format off
@@ -2660,10 +2745,12 @@ static const CRPCCommand commands[] =
     { "blockchain",         "getblockheader",         &getblockheader,         {"blockhash","verbose"} },
     { "blockchain",         "getchaintips",           &getchaintips,           {} },
     { "blockchain",         "getdifficulty",          &getdifficulty,          {} },
+    { "blockchain",         "getdifficultyalgorithm",          &getdifficultyalgorithm,          {} },
     { "blockchain",         "getmempoolancestors",    &getmempoolancestors,    {"txid","verbose"} },
     { "blockchain",         "getmempooldescendants",  &getmempooldescendants,  {"txid","verbose"} },
     { "blockchain",         "getmempoolentry",        &getmempoolentry,        {"txid"} },
     { "blockchain",         "getmempoolinfo",         &getmempoolinfo,         {} },
+    { "blockchain",         "getpowmode",         &getpowmode,         {} },
     { "blockchain",         "getrawmempool",          &getrawmempool,          {"verbose", "mempool_sequence"} },
     { "blockchain",         "gettxout",               &gettxout,               {"txid","n","include_mempool"} },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        {"hash_type"} },
