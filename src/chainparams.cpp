@@ -136,7 +136,10 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("seed.rin.so");
+
+	// not pointing to any ip address so commenting out for now to let process goes to vFixedSeeds directly instead
+        //vSeeds.emplace_back("seed.rin.so");
+
 
         base58Prefixes[PUBKEY_ADDRESS] = {60};
         base58Prefixes[SCRIPT_ADDRESS] = {122};
@@ -241,7 +244,7 @@ public:
         bech32_hrp = "trin";
         mweb_hrp = "tmweb";
 
-        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
+        //vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
         fDefaultConsistencyChecks = false;
         fRequireStandard = false;
