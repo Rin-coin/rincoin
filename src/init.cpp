@@ -1313,6 +1313,39 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
     } else {
         // Not categorizing as "Warning" because it's the default behavior
         LogPrintf("Config file: %s (not found, skipping)\n", config_file_path.string());
+
+        // Attempt to create a new config file with default content
+	FILE* configFile = fopen(config_file_path.string().c_str(), "a");
+        if (configFile != nullptr) {
+            std::string strHeader = "# Rincoin(RIN) config file:\n"
+                                    "rpcuser=username\n"
+                                    "rpcpassword=password\n"
+                                    "server=1\n"
+                                    "listen=1\n"
+                                    "daemon=1\n"
+                                    "upnp=1\n"
+                                    "port=9555\n"
+                                    "rpcport=9556\n"
+                                    "rpcbind=127.0.0.1\n"
+                                    "maxconnections=20\n"
+                                    "fallbackfee=0.0001\n"
+                                    "rpcallowip=127.0.0.1\n"
+                                    "deprecatedrpc=accounts\n"
+                                    "\n"
+                                    "# Addnodes:\n"
+                                    "addnode=104.207.135.201:9555\n"
+                                    "addnode=113.150.233.75:9555\n"
+                                    "addnode=208.180.220.104:9555\n"
+                                    "addnode=3.25.20.60:9555\n"
+                                    "addnode=12.188.7.49:9555\n"
+                                    "addnode=93.123.65.11:9555\n"
+                                    "addnode=82.65.215.211:9555\n"
+                                    "addnode=[240b:13:55e1:3200:be24:11ff:fe3e:3998]:9555\n"
+                                    "\n";
+            fwrite(strHeader.c_str(), 1, strHeader.size(), configFile);
+            fclose(configFile);
+        }
+
     }
 
     // Log the config arguments to debug.log
