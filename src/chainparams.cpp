@@ -107,8 +107,8 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartHeight = 2217600; // End Feb 2022
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2427264; // 364 days later
 
-        consensus.nMinimumChainWork = uint256S("0x00");
-        consensus.defaultAssumeValid = uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000000388f800e5d5d7");
+        consensus.defaultAssumeValid = uint256S("0x00000000f6bd472ee6a8e63aabe38e35462d2d17e2747135837240348c1d6b06");
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -159,14 +159,21 @@ public:
 
         checkpointData = {
             {
-                {0, uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db")}
+                {0, uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db")},
+                {1, uint256S("0x00002adfb206d5d942abc963b93fa2edb479eb7b6f589f5318ddda5cd732ec19")},
+                {19629, uint256S("0x0000041c9b4aac40edb1ba036cc2edc30840b126bf9af0533eae2db6dc9d3810")},
+                {26500, uint256S("0x00000007fb317ed0d588b8ccdcc38b21d3bb2c8d5c037e51a1094fec89e70d96")},
+                {30000, uint256S("0x0000000172f38a878dcf7134b3718a3d8960c2f6a49a26360d24995e3ce67a64")},
+                {79829, uint256S("0x000000011d3a05991506650a68c4e23454b25bc931a3806de36cbf86a405bef0")},
+                {130002, uint256S("0x00000000f83bd9b46e6fca276083c8baae9f5c6be3f0769ba18e39c72542eadc")},
+                {161690, uint256S("0x00000000f6bd472ee6a8e63aabe38e35462d2d17e2747135837240348c1d6b06")}
             }
         };
 
         chainTxData = ChainTxData{
-            /* nTime    */ 1743054848, // RinCoinのGenesisのtimestampと同じでOK
-            /* nTxCount */ 1,          // Genesisのcoinbaseのみ
-            /* dTxRate  */ 0.0         // 実際はまだTxがない
+            /* nTime    */ 1752601029, // RinCoinのGenesisのtimestampと同じでOK
+            /* nTxCount */ 172868,          // Genesisのcoinbaseのみ
+            /* dTxRate  */ 0.01849121413816061         // 実際はまだTxがない
         };
         
     }
