@@ -100,7 +100,7 @@ struct Params {
      */
     bool signet_blocks{false};
     std::vector<uint8_t> signet_challenge;
-    int DGWHeight;
+    uint32_t DGWHeight;
     int Mem64Height;
 };
 } // namespace Consensus
