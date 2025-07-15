@@ -2714,7 +2714,7 @@ UniValue getpowmode(const JSONRPCRequest& request)
     result.pushKV("height", height);
     result.pushKV("current_blockhash", tip ? tip->GetBlockHash().GetHex() : "");
 
-    bool isMem256 = IsMem256ActiveAtTip();
+    bool isMem256 = IsMem256ActiveAtTip(ChainActive().Tip(), Params().GetConsensus());
     result.pushKV("pow", isMem256 ? "mem256" : "legacy");
     result.pushKV("algo", "rinhash");
     result.pushKV("mem256_enabled", isMem256);

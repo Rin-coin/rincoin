@@ -44,12 +44,10 @@ std::string DetectCurrentDifficultyAlgo(const CBlockIndex* pindexLast, const Con
     }
 }
 
-bool IsMem256ActiveAtTip()
+bool IsMem256ActiveAtTip(const CBlockIndex* tip, const Consensus::Params& params)
 {
-    const CBlockIndex* tip = ::ChainActive().Tip();
     if (!tip) return false;
-    const Consensus::Params& consensus = Params().GetConsensus();
-    return tip->nHeight >= consensus.Mem64Height;
+    return tip->nHeight >= params.Mem64Height;
 }
 
 
