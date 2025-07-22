@@ -26,13 +26,8 @@ CTxIn generatetoaddress(const NodeContext& node, const std::string& address)
 CTxIn MineBlock(const NodeContext& node, const CScript& coinbase_scriptPubKey)
 {
     auto block = PrepareBlock(node, coinbase_scriptPubKey);
-    uint256 hash = uint256(0);
-    if (ChainActive().Height() >= Params().GetConsensus().Mem256Height) {
-        hash = block->GetPoWHash();
-    } else {
-        hash = block->GetOldPoWHash();
-    }
-    while (!CheckProofOfWork(hash, block->nBits, Params().GetConsensus())) {
+
+    while (!CheckProofOfWork(block->GetPoWHash(), block->nBits, Params().GetConsensus())) {
         ++block->nNonce;
         assert(block->nNonce);
     }
