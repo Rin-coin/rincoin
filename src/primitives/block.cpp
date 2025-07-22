@@ -33,11 +33,6 @@ uint256 CBlockHeader::GetOldPoWHash() const
     return RinHash(*this, 64);
 }
 
-uint256 CBlockHeader::Get256Hash() const
-{
-    return RinHash(*this, 256000);
-}
-
 std::string CBlock::ToString() const
 {
     std::stringstream s;

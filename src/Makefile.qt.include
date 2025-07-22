@@ -333,12 +333,12 @@ qt_rincoin_qt_LDADD = $(rincoin_qt_ldadd)
 qt_rincoin_qt_LDFLAGS = $(rincoin_qt_LDFLAGS)
 qt_rincoin_qt_LIBTOOLFLAGS = $(rincoin_qt_libtoolflags)
 
-rincoin_gui_CPPFLAGS = $(rincoin_qt_cppflags)
-rincoin_gui_CXXFLAGS = $(rincoin_qt_cxxflags)
+litecoin_gui_CPPFLAGS = $(rincoin_qt_cppflags)
+litecoin_gui_CXXFLAGS = $(rincoin_qt_cxxflags)
 rincoin_gui_SOURCES = $(rincoin_qt_sources)
 rincoin_gui_LDADD = $(rincoin_qt_ldadd)
-rincoin_gui_LDFLAGS = $(rincoin_qt_LDFLAGS)
-rincoin_gui_LIBTOOLFLAGS = $(rincoin_qt_libtoolflags)
+litecoin_gui_LDFLAGS = $(rincoin_qt_LDFLAGS)
+litecoin_gui_LIBTOOLFLAGS = $(rincoin_qt_libtoolflags)
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)

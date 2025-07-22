@@ -84,7 +84,7 @@ public:
         consensus.CSVHeight = 26500; // 53e0af7626f7f51ce9f3b6cfc36508a5b1d2f6c4a75ac215dc079442692a4c0b
         consensus.SegwitHeight = 26500; // 0000000000000000001c8018d9cb3b742ef25114f27563e3fc4a1902167f9893
         consensus.MinBIP9WarningHeight = 25000; // segwit activation height + miner confirmation window
-        consensus.Mem64Height = 170000;
+        consensus.Mem256Height = 170000;
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 33 * 60 * 60; // 33hour
         consensus.nPowTargetSpacing = 60;
@@ -195,7 +195,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.DGWHeight = 100; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
-        consensus.Mem64Height = 170;
+        consensus.Mem256Height = 170;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -282,7 +282,7 @@ public:
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.DGWHeight = 100; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
-        consensus.Mem64Height = 1700;
+        consensus.Mem256Height = 1700;
         consensus.nPowTargetTimespan = 33 * 60 * 60; // 33hour
         consensus.nPowTargetSpacing = 60 * 50;
         consensus.fPowAllowMinDifficultyBlocks = true;
