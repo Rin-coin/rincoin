@@ -124,10 +124,11 @@ MESSAGEMAP = {
 }
 
 MAGIC_BYTES = {
-    "mainnet": b"\xfb\xc0\xb6\xdb",   # mainnet
-    "testnet4": b"\xfd\xd2\xc8\xf1",  # testnet4
-    "regtest": b"\xfa\xbf\xb5\xda",   # regtest
-    "signet": b"\x0a\x03\xcf\x40",    # signet
+    "mainnet":  b"\x52\x49\x4e\x43",  # "RINC" — Rincoin mainnet
+    "testnet4": b"\x72\x69\x6e\x74",  # "rint" — Rincoin testnet
+    "regtest":  b"\x72\x72\x63\x74",  # "rrct" — Rincoin regtest
+    "signet":   b"\x0a\x03\xcf\x40",  # signet (unused on Rincoin)
+    "preview":  b"\x72\x69\x6e\x70",  # "rinp" — Rincoin previewnet
 }
 
 

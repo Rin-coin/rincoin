@@ -62,6 +62,7 @@ src/qt/bitcoin-qt.includes
 .dirstamp
 .libs
 .vscode
+.venv
 .*.swp
 *.*~*
 *.bak
@@ -155,3 +156,7 @@ osx_volname
 dist/
 *.background.tiff
 /tmp
+
+# test/bench binaries
+/src/test/test_litecoin
+/src/bench/bench_litecoin

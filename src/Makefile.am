@@ -176,6 +176,7 @@ BITCOIN_CORE_H = \
   compat/sanity.h \
   compressor.h \
   consensus/consensus.h \
+  consensus/rinhash_consensus_data.h \
   consensus/tx_check.h \
   consensus/tx_verify.h \
   core_io.h \
@@ -535,6 +536,7 @@ libbitcoin_consensus_a_SOURCES = \
   consensus/merkle.cpp \
   consensus/merkle.h \
   consensus/params.h \
+  consensus/rinhash_consensus_data.h \
   consensus/tx_check.cpp \
   consensus/validation.h \
   hash.cpp \
@@ -796,7 +798,28 @@ CLEANFILES += wallet/test/*.gcda wallet/test/*.gcno
 CLEANFILES += zmq/*.gcda zmq/*.gcno
 CLEANFILES += obj/build.h
 
-EXTRA_DIST = $(CTAES_DIST)
+EXTRA_DIST = $(CTAES_DIST) \
+  consensus/rinhash_consensus.json \
+  consensus/rinhash_consensus.schema.json \
+  consensus/gen_rinhash_consensus.py
+
+
+# Regenerate the RinHash consensus header from the JSON source of truth.
+update-rinhash-consensus:
+	$(AM_V_GEN) $(PYTHON) $(srcdir)/consensus/gen_rinhash_consensus.py \
+	  --json $(srcdir)/consensus/rinhash_consensus.json \
+	  --schema $(srcdir)/consensus/rinhash_consensus.schema.json \
+	  --out $(srcdir)/consensus/rinhash_consensus_data.h
+
+# Verify rinhash_consensus_data.h is in sync with rinhash_consensus.json.
+check-rinhash-consensus:
+	$(AM_V_GEN) $(PYTHON) $(srcdir)/consensus/gen_rinhash_consensus.py \
+	  --json $(srcdir)/consensus/rinhash_consensus.json \
+	  --schema $(srcdir)/consensus/rinhash_consensus.schema.json \
+	  --out $(srcdir)/consensus/rinhash_consensus_data.h \
+	  --check
+
+.PHONY: update-rinhash-consensus check-rinhash-consensus
 
 
 config/bitcoin-config.h: config/stamp-h1

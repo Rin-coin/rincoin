@@ -1,3 +1,193 @@
+# Rincoin Core v1.1.0 Release Notes
+
+**Release Date:** *to be set on tag*
+**Base Commit:** `b52c87778` (master / v1.0.5 line)
+**Branch:** `release-v1.1.0-community-maintenance`
+
+---
+
+## Overview
+
+v1.1.0 is a **community-maintenance and infrastructure release**. It does
+not change the consensus rules in force on mainnet today. Instead it lands
+the framework that future RinHash and consensus parameter changes will
+travel through, ships one narrow forward-looking overlay (a peer-protocol-
+version floor at the per-network activation-0 height), and folds in
+operational/tooling improvements that have accumulated since v1.0.5.
+
+Highlights:
+
+- **RinHash activations table** — a single JSON consensus table
+  (`src/consensus/rinhash_consensus.json`) drives a code-generated header,
+  a runtime resolver (`Consensus::Params::GetRinHashEffectiveAt`), and a
+  CI guard (`gen_rinhash_consensus.py --check`) preventing JSON↔code
+  drift. See `doc/rinhash-activations.md`.
+- **Peer-protocol-version floor at activation 0** —
+  `min_peer_protocol_version = 70018` becomes effective at heights
+  `840000` (mainnet, 4th halving), `4200` (testnet), `600` (regtest), and
+  `600` (preview). From those heights onward, v1.1.0 nodes disconnect
+  peers that have not advertised at least `nVersion = 70018` during the
+  version handshake.
+- **`PROTOCOL_VERSION` bump 70017 → 70018** to advertise the activations
+  table handshake.
+- **Previewnet (`preview` chain)** — a fourth chain dedicated to
+  rehearsal, with its own magic, ports, address prefixes, and HRPs but
+  reusing testnet's genesis. Activated via `-preview`.
+- **HogEx empty-vin fix** — `CheckTransactionInputs` and the MWEB miner
+  no longer reject HogEx transactions for having an empty `vin`, the
+  required shape for the MWEB peg-out aggregator transaction.
+- **Splash and logo** restored to the v1.0.1 assets after a regression
+  that landed in the v1.0.4 line.
+
+## Backward Compatibility
+
+v1.1.0 does not change the consensus rules currently in force on mainnet.
+Block validation, PoW, transaction format, subsidy rules, chain selection,
+existing blocks, wallets, and datadirs remain compatible with the v1.0.x
+line. The new peer-protocol floor is scheduled for the activation height
+and affects network reachability, not historical block validity.
+
+---
+
+## Major Changes
+
+### 1. RinHash Activations Table
+
+A small, auditable, JSON-driven framework for height-indexed consensus
+parameter changes.
+
+- **Authoritative table:** `src/consensus/rinhash_consensus.json` —
+  per-network `init` baseline plus an ordered list of `activations[]`
+  overlays.
+- **Schema:** `src/consensus/rinhash_consensus.schema.json` — validated
+  during code generation.
+- **Generator:** `python3 src/consensus/gen_rinhash_consensus.py` produces
+  `src/consensus/rinhash_consensus_data.h`. CI runs it with `--check`;
+  PRs that hand-edit the header without regenerating fail the build.
+- **Build wiring:** `src/Makefile.am` invokes `--check` as part of the
+  default build target.
+- **Runtime resolver:** `Consensus::Params::GetRinHashEffectiveAt(int height)`
+  returns the `RinHashEffective` (Argon2d parameters + the
+  `min_peer_protocol_version` floor) in force at any height.
+- **Last-write-wins per field:** overlays specify only the fields they
+  change; everything else inherits from the most recent prior overlay or
+  the `init` baseline.
+
+See `doc/rinhash-activations.md` for the full design and a worked example
+of adding a new overlay.
+
+### 2. Peer-Protocol-Version Floor at Activation 0
+
+The v1.1.0 activation-0 overlay sets `min_peer_protocol_version = 70018`
+at the per-network activation heights below. From those heights forward,
+peers advertising `nVersion < 70018` are disconnected during the version
+handshake (`net_processing.cpp`, VERSION handler).
+
+| Network  | Activation-0 height | Floor  |
+|----------|---------------------|--------|
+| mainnet  | 840000              | 70018  |
+| testnet  | 4200                | 70018  |
+| regtest  | 600                 | 70018  |
+| preview  | 600                 | 70018  |
+
+Below the activation height the floor is dormant (`0`); the existing
+`MIN_PEER_PROTO_VERSION = 31800` continues to be the only floor enforced.
+
+### 3. `PROTOCOL_VERSION` Bumped to 70018
+
+`src/version.h` advertises `PROTOCOL_VERSION = 70018` to signal support for
+the RinHash activations table. v1.0.x peers (`70017`) remain interoperable
+with v1.1.0 peers everywhere except after activation-0, where they will be
+disconnected during the version handshake.
+
+### 4. Previewnet (`preview` Chain)
+
+A fourth chain dedicated to rehearsal mining and integration drills,
+ported from work originally landed under `customized-halving`:
+
+- `-preview` command-line flag, `[preview]` config section.
+- P2P magic `rinp` (`0x72 0x69 0x6E 0x70`); ports `49555` (P2P),
+  `49556` (RPC).
+- Bech32 HRPs `prin` / `prmweb`; base58 prefixes `56` (PUBKEY),
+  `118` (SCRIPT), `219` (SECRET); ext-key prefixes `0x03E25D80` /
+  `0x03E25946`.
+- Reuses testnet's genesis verbatim — simplifies sync and tooling.
+- Activation-0 overlay matches regtest (height `600`, floor `70018`).
+
+### 5. MWEB HogEx Empty-vin Fix
+
+`src/consensus/tx_check.cpp` now exempts HogEx transactions from the
+"transaction has no inputs" check, and `src/mweb/mweb_miner.cpp` asserts
+the HogEx structural invariant before block assembly so a malformed
+HogEx fails fast rather than producing an invalid block. This restores
+the ability to mine MWEB blocks that contain a HogEx aggregator
+transaction with an empty `vin` (its specified shape).
+
+### 6. Splash and Logo Restored
+
+`src/qt/res/icons/{rincoin.png, rincoin_splash.png, bitcoin.ico,
+bitcoin_testnet.ico}` are restored to their v1.0.1 (`5cf3d4a113`) form,
+reverting an unintended asset change that landed in the v1.0.4 line.
+
+---
+
+## RPC Changes
+
+- **New:** `getrinhashparams` — returns the `effective` RinHash
+  parameters and `min_peer_protocol_version` floor at the current tip,
+  plus a `next_change` block describing the next scheduled overlay (if
+  any).
+- **Extended:** `getblockchaininfo` now contains a top-level `rinhash`
+  object with the same `effective` payload, suitable for explorers and
+  health dashboards.
+
+## P2P Changes
+
+- `PROTOCOL_VERSION = 70018`. The bump is non-disruptive on its own; the
+  associated peer floor is gated on the per-network activation-0 height.
+
+## Testing
+
+- **Unit tests** (`src/test/rinhash_tests.cpp`): canonical PoW vector,
+  init-only dormancy, mainnet/testnet/regtest/preview activation-0
+  boundaries, height-aware `GetPoWHash` overload, pending-salt rejection.
+- **Functional test** (`test/functional/feature_min_peer_proto_floor.py`):
+  regtest end-to-end — pre-activation low-version peer accepted, post-
+  activation low-version peer disconnected, post-activation peer at the
+  floor accepted.
+- **Codegen guard** (`gen_rinhash_consensus.py --check`): wired into the
+  build; fails PRs whose JSON and generated header are out of sync.
+
+---
+
+## Upgrade Procedure
+
+Node operators, miners, and exchange/explorer integrators should plan a
+coordinated upgrade before mainnet block `840000`. From that height
+onward, peers still running v1.0.x will be unable to maintain connections
+to v1.1.0 peers.
+
+- **Wallet users:** standard upgrade — replace binaries, restart.
+  No datadir migration required; no reindex required.
+- **Miners:** upgrade ahead of mainnet height `840000`. After activation,
+  v1.0.x miners will be unable to maintain peer connections.
+- **Pools / explorers / exchanges:** plan a window before mainnet height
+  `840000`; consume `getrinhashparams` if you wish to surface the
+  upcoming change to users.
+
+## Known Issues
+
+- Customised halving, alternative Argon2d parameter sets, and any new
+  transaction-level consensus rules are explicitly out of scope for
+  v1.1.0 and remain subjects for separate, community-reviewed proposals.
+
+## Credits
+
+Thanks to everyone who contributed to this release, including the
+upstream Litecoin and Bitcoin Core developers whose work this builds on.
+
+---
+
 # Rincoin Core v1.0.4 Release Notes
 
 **Release Date:** February 4, 2026  

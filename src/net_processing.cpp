@@ -2651,6 +2651,20 @@ void PeerManager::ProcessMessage(CNode& pfrom, const std::string& msg_type, CDat
             return;
         }
 
+        // Apply the RinHash overlay's min_peer_protocol_version floor (if any).
+        // The floor uses the active chain's current tip height, so it kicks
+        // in automatically once the chain reaches the activation height.
+        {
+            const int tip_height = ::ChainActive().Tip() ? ::ChainActive().Height() : 0;
+            const int rin_floor = Params().GetConsensus().GetRinHashEffectiveAt(tip_height).min_peer_protocol_version;
+            if (rin_floor != 0 && nVersion < rin_floor) {
+                LogPrint(BCLog::NET, "peer=%d using version %i below RinHash floor %i; disconnecting\n",
+                         pfrom.GetId(), nVersion, rin_floor);
+                pfrom.fDisconnect = true;
+                return;
+            }
+        }
+
         if (!vRecv.empty())
             vRecv >> addrFrom >> nNonce;
         if (!vRecv.empty()) {

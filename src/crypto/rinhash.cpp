@@ -10,8 +10,15 @@
 #include <span.h> // MakeUCharSpan を使うなら必要
 #include <stdexcept>
 
-uint256 RinHash(const CBlockHeader& block)
+uint256 RinHash(const CBlockHeader& block, const Consensus::Params::Argon2dParams& pow)
 {
+    if (pow.salt == "PENDING") {
+        // Reserved future overlay whose salt has not yet been committed.
+        // No node may produce or accept blocks under such parameters.
+        throw std::runtime_error("RinHash: salt 'PENDING' is reserved; "
+                                 "this build cannot validate blocks at this height");
+    }
+
     CDataStream ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << block;
     std::vector<unsigned char> input(ss.begin(), ss.end());
@@ -22,18 +29,17 @@ uint256 RinHash(const CBlockHeader& block)
     blake3_hasher_update(&blake_hasher, input.data(), input.size());
     blake3_hasher_finalize(&blake_hasher, blake3_out, 32);
 
-    const char* salt_str = "RinCoinSalt";
     uint8_t argon2_out[32];
     argon2_context context = {};
     context.out = argon2_out;
     context.outlen = 32;
     context.pwd = blake3_out;
     context.pwdlen = 32;
-    context.salt = (uint8_t*)salt_str;
-    context.saltlen = strlen(salt_str);
-    context.t_cost = 2;
-    context.m_cost = 64;
-    context.lanes = 1;
+    context.salt = (uint8_t*)pow.salt.data();
+    context.saltlen = pow.salt.size();
+    context.t_cost = pow.t_cost;
+    context.m_cost = pow.m_cost;
+    context.lanes = pow.lanes;
     context.threads = 1;
     context.version = ARGON2_VERSION_13;
     context.allocate_cbk = nullptr;
@@ -48,4 +54,16 @@ uint256 RinHash(const CBlockHeader& block)
     SHA3_256().Write(Span<const unsigned char>(argon2_out, 32)).Finalize(sha3_out);
 
     return uint256(std::vector<unsigned char>(sha3_out, sha3_out + 32));
+}
+
+uint256 RinHash(const CBlockHeader& block)
+{
+    // Pre-activations parameters; equivalent to the original hardcoded values.
+    static const Consensus::Params::Argon2dParams kInit{
+        /*t_cost*/ 2u,
+        /*m_cost*/ 64u,
+        /*lanes */ 1u,
+        /*salt  */ std::string("RinCoinSalt"),
+    };
+    return RinHash(block, kInit);
 }

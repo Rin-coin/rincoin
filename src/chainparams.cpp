@@ -22,7 +22,34 @@
 #include <arith_uint256.h>
 #include <util/system.h>  // for LogPrintf, if you want
 #include <consensus/params.h>  // for Consensus::Params
+#include <consensus/rinhash_consensus_data.h>
 #include "crypto/rinhash.h"  // Change the path according to the location of RinHash
+
+namespace {
+//! Copy generator output (rinhash_consensus_data.h) into a Consensus::Params overlay.
+inline Consensus::Params::RinHashOverlay ToOverlay(const Consensus::RinHashGen::GeneratedOverlay& g)
+{
+    Consensus::Params::RinHashOverlay o;
+    o.has_t_cost                    = g.has_t_cost;                    o.t_cost                    = g.t_cost;
+    o.has_m_cost                    = g.has_m_cost;                    o.m_cost                    = g.m_cost;
+    o.has_lanes                     = g.has_lanes;                     o.lanes                     = g.lanes;
+    o.has_salt                      = g.has_salt;                      o.salt                      = g.salt;
+    o.has_min_peer_protocol_version = g.has_min_peer_protocol_version; o.min_peer_protocol_version = g.min_peer_protocol_version;
+    return o;
+}
+
+inline void ApplyRinHashConsensus(Consensus::Params& consensus,
+                                  const Consensus::RinHashGen::GeneratedNetwork& gen)
+{
+    consensus.rinhash.init = ToOverlay(gen.init);
+    consensus.rinhash.activations.clear();
+    consensus.rinhash.activations.reserve(gen.activations.size());
+    for (const auto& a : gen.activations) {
+        consensus.rinhash.activations.push_back(
+            Consensus::Params::RinHashActivation{a.activation_height, ToOverlay(a)});
+    }
+}
+} // namespace
 
 static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesisOutputScript, uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
 {
@@ -112,6 +139,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
         consensus.nMinerConfirmationWindow = 8064; // nPowTargetTimespan / nPowTargetSpacing * 4
         consensus.DGWHeight = 30000; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
+        ApplyRinHashConsensus(consensus, Consensus::RinHashGen::GetMainnetData());
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -339,6 +367,7 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.DGWHeight = 100; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
+        ApplyRinHashConsensus(consensus, Consensus::RinHashGen::GetTestnetData());
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
@@ -425,6 +454,7 @@ public:
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.DGWHeight = std::numeric_limits<int>::max();  // Turns off Dark Gravity Wave (DGW) difficulty adjustment algorithm for regtest
+        ApplyRinHashConsensus(consensus, Consensus::RinHashGen::GetRegtestData());
         consensus.nPowTargetTimespan = 33 * 60 * 60; // 33hour
         consensus.nPowTargetSpacing = 60 * 50;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -557,6 +587,111 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
     }
 }
 
+
+/**
+ * Preview network (publicly reachable fork-rehearsal chain).
+ *
+ * Combines testnet's PoW characteristics (real mining,
+ * fPowAllowMinDifficultyBlocks + DGW retarget at h=100) with regtest's fast
+ * RinHash activation schedule (activation 0 at height 600), so operators can
+ * rehearse activation-0 behaviour on a real PoW network in minutes.
+ * Genesis block, vFixedSeeds and chainTxData are reused verbatim from
+ * testnet so we do not have to ship a separate genesis / seed table.
+ */
+class CPreviewParams : public CChainParams {
+public:
+    explicit CPreviewParams(const ArgsManager& /*args*/) {
+        strNetworkID = CBaseChainParams::PREVIEW;
+        consensus.signet_blocks = false;
+        consensus.signet_challenge.clear();
+        // Regtest-style fast halving for fork rehearsal (~2.5h per halving).
+        consensus.nSubsidyHalvingInterval = 150;
+        consensus.BIP16Height = 0;
+        consensus.BIP34Height = 76;
+        consensus.BIP34Hash = uint256S("8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573");
+        consensus.BIP65Height = 76;
+        consensus.BIP66Height = 76;
+        consensus.CSVHeight = 6048;
+        consensus.SegwitHeight = 6048;
+        consensus.MinBIP9WarningHeight = 8064;
+        consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        consensus.nPowTargetTimespan = 33 * 60 * 60; // 33h
+        consensus.nPowTargetSpacing = 60;
+        consensus.fPowAllowMinDifficultyBlocks = true;
+        consensus.fPowNoRetargeting = false;
+        consensus.nRuleChangeActivationThreshold = 1512;
+        consensus.nMinerConfirmationWindow = 2016;
+        consensus.DGWHeight = 100;
+        ApplyRinHashConsensus(consensus, Consensus::RinHashGen::GetPreviewData());
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartHeight = 2225664;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeoutHeight = 2435328;
+
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].bit = 4;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartHeight = 2209536;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2419200;
+
+        consensus.nMinimumChainWork = uint256S("0x00");
+        consensus.defaultAssumeValid = uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db");
+
+        pchMessageStart[0] = 0x72; // 'r'
+        pchMessageStart[1] = 0x69; // 'i'
+        pchMessageStart[2] = 0x6E; // 'n'
+        pchMessageStart[3] = 0x70; // 'p'
+        nDefaultPort = 49555;
+        nPruneAfterHeight = 1000;
+        m_assumed_blockchain_size = 4;
+        m_assumed_chain_state_size = 1;
+
+        // Reuse testnet's genesis verbatim so we can share testnet's seed
+        // table and chainTxData.
+        genesis = CreateTestNetGenesisBlock(1743059000, 27864, 0x1f00ffff, 1, 50 * COIN);
+        consensus.hashGenesisBlock = genesis.GetHash();
+        assert(consensus.hashGenesisBlock == uint256S("0x00009d5fbc8579e8b4292f1bab22437d9468c0cc615cb5b0242d8159b31760ad"));
+        assert(genesis.hashMerkleRoot == uint256S("0x7a2a292324679fdd5b843a9daf72acc7b2801ab95321e863e545f69ced707b0e"));
+
+        vFixedSeeds.clear();
+        vSeeds.clear();
+
+        // Base58 prefixes picked one above neighbouring coins to avoid
+        // address-format collisions (Peercoin uses 55/117). The 4-byte
+        // extended-key prefixes were brute-forced from the BIP32 layout so
+        // that every encodable payload yields the desired 4-char string.
+        base58Prefixes[PUBKEY_ADDRESS]  = std::vector<unsigned char>(1, 56);   // "P..."
+        base58Prefixes[SCRIPT_ADDRESS]  = std::vector<unsigned char>(1, 118);  // "p..."
+        base58Prefixes[SCRIPT_ADDRESS2] = std::vector<unsigned char>(1, 50);
+        base58Prefixes[SECRET_KEY]      = std::vector<unsigned char>(1, 219);  // "8M.../8N..."
+        base58Prefixes[EXT_PUBLIC_KEY]  = {0x03, 0xE2, 0x5D, 0x80};            // "ppub..."
+        base58Prefixes[EXT_SECRET_KEY]  = {0x03, 0xE2, 0x59, 0x46};            // "pprv..."
+
+        bech32_hrp = "prin";
+        mweb_hrp   = "prmweb";
+
+        vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
+
+        fDefaultConsistencyChecks = false;
+        fRequireStandard = false;
+        m_is_test_chain = true;
+        m_is_mockable_chain = false;
+
+        checkpointData = {
+            {
+                {0, uint256S("0x00009d5fbc8579e8b4292f1bab22437d9468c0cc615cb5b0242d8159b31760ad")}
+            }
+        };
+
+        chainTxData = ChainTxData{
+            /* nTime    */ 1743059000,
+            /* nTxCount */ 1,
+            /* dTxRate  */ 0.0
+        };
+    }
+};
+
 static std::unique_ptr<const CChainParams> globalChainParams;
 
 const CChainParams &Params() {
@@ -574,6 +709,8 @@ std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, c
         return std::unique_ptr<CChainParams>(new CTestNetParams()); // TODO: Support SigNet
     } else if (chain == CBaseChainParams::REGTEST) {
         return std::unique_ptr<CChainParams>(new CRegTestParams(args));
+    } else if (chain == CBaseChainParams::PREVIEW) {
+        return std::unique_ptr<CChainParams>(new CPreviewParams(args));
     }
     throw std::runtime_error(strprintf("%s: Unknown chain %s.", __func__, chain));
 }

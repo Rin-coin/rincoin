@@ -52,6 +52,9 @@ Quick start for building from source:
 
 See `chainparams.cpp` for network configuration.  
 See `GetPoWHash()` for RinHash implementation.  
+See [doc/rinhash-activations.md](doc/rinhash-activations.md) for the
+height-indexed RinHash activations table introduced in v1.1.0 and for
+items intentionally left out of this release.
 
-## Rincoin Communitys
+## Rincoin Community
 [![Discord Banner 2](https://discord.com/api/guilds/1354664874176680017/widget.png?style=banner2)](https://discord.gg/Ap7TUXYRBf)

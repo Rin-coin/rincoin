@@ -1,0 +1,87 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/takologi/rincoin/src/consensus/rinhash_consensus.schema.json",
+    "title": "RinHash Consensus Parameters",
+    "description": "Per-network RinHash consensus table. `init` carries the network's current consensus values (the constants previously hardcoded in chainparams.cpp / rinhash.cpp). `activations` is a strictly height-ascending list of overlays; each entry sets the fields it changes and inherits all others from the previous overlay (or from `init`).",
+    "type": "object",
+    "additionalProperties": false,
+    "patternProperties": {
+        "^_comment": { "type": ["string", "object"] },
+        "^\\$schema$": { "type": "string" }
+    },
+    "required": ["networks"],
+    "properties": {
+        "networks": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "mainnet": { "$ref": "#/definitions/network" },
+                "testnet": { "$ref": "#/definitions/network" },
+                "regtest": { "$ref": "#/definitions/network" },
+                "preview": { "$ref": "#/definitions/network" }
+            },
+            "required": ["mainnet", "testnet", "regtest", "preview"]
+        }
+    },
+    "definitions": {
+        "network": {
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": { "^_comment": { "type": ["string", "object"] } },
+            "required": ["init", "activations"],
+            "properties": {
+                "init":         { "$ref": "#/definitions/init" },
+                "activations":  { "$ref": "#/definitions/activations" }
+            }
+        },
+        "init": {
+            "type": "object",
+            "description": "Initial consensus values for the network. The four Argon2d fields are required (the chain has always had a PoW). All other overlay-able fields are optional; absence means 'no rule'.",
+            "additionalProperties": false,
+            "patternProperties": { "^_comment": { "type": ["string", "object"] } },
+            "required": ["t_cost", "m_cost", "lanes", "salt"],
+            "properties": {
+                "t_cost": { "$ref": "#/definitions/t_cost" },
+                "m_cost": { "$ref": "#/definitions/m_cost" },
+                "lanes":  { "$ref": "#/definitions/lanes" },
+                "salt":   { "$ref": "#/definitions/salt" },
+                "min_peer_protocol_version":{ "$ref": "#/definitions/min_peer_protocol_version" }
+            }
+        },
+        "activations": {
+            "type": "array",
+            "description": "Strictly height-ascending list of overlays. Each entry must specify activation_height plus only the fields that change at that height.",
+            "items": { "$ref": "#/definitions/activation" }
+        },
+        "activation": {
+            "type": "object",
+            "additionalProperties": false,
+            "patternProperties": { "^_comment": { "type": ["string", "object"] } },
+            "required": ["activation_height"],
+            "properties": {
+                "activation_height": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Block height at which this activation's overlay takes effect."
+                },
+                "t_cost": { "$ref": "#/definitions/t_cost" },
+                "m_cost": { "$ref": "#/definitions/m_cost" },
+                "lanes":  { "$ref": "#/definitions/lanes" },
+                "salt":   { "$ref": "#/definitions/salt" },
+                "min_peer_protocol_version":{ "$ref": "#/definitions/min_peer_protocol_version" }
+            }
+        },
+
+        "t_cost": { "type": "integer", "minimum": 1, "maximum": 1000,     "description": "Argon2d time cost (iterations)." },
+        "m_cost": { "type": "integer", "minimum": 8, "maximum": 16777216, "description": "Argon2d memory cost in KiB." },
+        "lanes":  { "type": "integer", "minimum": 1, "maximum": 64,       "description": "Argon2d parallelism." },
+        "salt":   {
+            "type": "string", "minLength": 4, "maxLength": 64,
+            "description": "Argon2d salt. May be the literal 'PENDING' for a reserved future overlay whose salt has not yet been committed; nodes MUST reject blocks at/after such an entry's activation_height."
+        },
+        "min_peer_protocol_version": {
+            "type": "integer", "minimum": 0,
+            "description": "Minimum P2P protocol version required from peers once the active chain reaches this overlay's activation_height. 0 means no extra floor beyond MIN_PEER_PROTO_VERSION."
+        }
+    }
+}

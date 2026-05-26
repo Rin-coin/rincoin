@@ -11,6 +11,8 @@
 #include <uint256.h>
 #include <mweb/mweb_models.h>
 
+namespace Consensus { struct Params; }
+
 /** Nodes collect new transactions into a block, hash them into a hash tree,
  * and scan through nonce values to make the block's hash satisfy proof-of-work
  * requirements.  When they solve the proof-of-work, they broadcast the block
@@ -53,7 +55,13 @@ public:
 
     uint256 GetHash() const;
 
+    //! PoW hash using the network's pre-activations (init) parameters. Use only
+    //! where no block-height context is available; prefer GetPoWHashAt().
     uint256 GetPoWHash() const;
+
+    //! PoW hash using the RinHash parameters effective at the given block
+    //! height under the supplied consensus rules.
+    uint256 GetPoWHashAt(int height, const Consensus::Params& consensusParams) const;
 
     int64_t GetBlockTime() const
     {

@@ -1,0 +1,71 @@
+{
+    "$schema": "./rinhash_consensus.schema.json",
+
+    "networks": {
+        "mainnet": {
+            "_comment": "Rincoin mainnet. init = pre-v1.1.0 baseline parameters; activations[] = future, height-indexed overlays. Activation 0 height = 4 * nSubsidyHalvingInterval (4 * 210000 = 840000), aligned with the fourth halving boundary.",
+            "init": {
+                "_comment": "init = pre-v1.1.0 baseline parameters; identical to the values that were hardcoded in chainparams.cpp / rinhash.cpp. No extra peer-protocol-version floor before activation 0 becomes effective.",
+                "t_cost": 2,
+                "m_cost": 64,
+                "lanes": 1,
+                "salt": "RinCoinSalt"
+            },
+            "activations": [
+                {
+                    "_comment": "Activation 0 turns on the v1.1.0 peer-protocol-version floor. PoW parameters are unchanged. From this height onward, peers advertising nVersion < 70018 are disconnected during the version handshake.",
+                    "activation_height": 840000,
+                    "min_peer_protocol_version": 70018
+                }
+            ]
+        },
+
+        "testnet": {
+            "_comment": "Testnet. Activation 0 height = 4 * nSubsidyHalvingInterval (4 * 1050 = 4200) so functional tests reach it in seconds.",
+            "init": {
+                "t_cost": 2,
+                "m_cost": 64,
+                "lanes": 1,
+                "salt": "RinCoinSalt"
+            },
+            "activations": [
+                {
+                    "activation_height": 4200,
+                    "min_peer_protocol_version": 70018
+                }
+            ]
+        },
+
+        "regtest": {
+            "_comment": "Regtest. Activation 0 height = 4 * nSubsidyHalvingInterval (4 * 150 = 600) so regtest functional tests can sweep both regimes within a single run.",
+            "init": {
+                "t_cost": 2,
+                "m_cost": 64,
+                "lanes": 1,
+                "salt": "RinCoinSalt"
+            },
+            "activations": [
+                {
+                    "activation_height": 600,
+                    "min_peer_protocol_version": 70018
+                }
+            ]
+        },
+
+        "preview": {
+            "_comment": "Previewnet (publicly reachable rehearsal network). Mirrors regtest's activation schedule (activation 0 height = 4 * nSubsidyHalvingInterval = 4 * 150 = 600) so operators can rehearse activation-0 behaviour on a real PoW network.",
+            "init": {
+                "t_cost": 2,
+                "m_cost": 64,
+                "lanes": 1,
+                "salt": "RinCoinSalt"
+            },
+            "activations": [
+                {
+                    "activation_height": 600,
+                    "min_peer_protocol_version": 70018
+                }
+            ]
+        }
+    }
+}

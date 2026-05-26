@@ -9,7 +9,13 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70017;
+// Bumped from 70017 to 70018 in Rincoin v1.1.0 to advertise support for the
+// RinHash activations table introduced in this release. The bump itself
+// changes no wire protocol; it is the version number that the per-network
+// `min_peer_protocol_version` overlay (configured in
+// src/consensus/rinhash_consensus.json) uses to fence off pre-v1.1.0 nodes
+// once the active chain reaches the overlay's activation_height.
+static const int PROTOCOL_VERSION = 70018;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;

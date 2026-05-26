@@ -10,6 +10,7 @@
 #include <util/strencodings.h>
 #include <crypto/common.h>
 #include "crypto/rinhash.h"
+#include <consensus/params.h>
 
 uint256 CBlockHeader::GetHash() const
 {
@@ -19,6 +20,11 @@ uint256 CBlockHeader::GetHash() const
 uint256 CBlockHeader::GetPoWHash() const
 {
     return RinHash(*this);
+}
+
+uint256 CBlockHeader::GetPoWHashAt(int height, const Consensus::Params& consensusParams) const
+{
+    return RinHash(*this, consensusParams.GetRinHashEffectiveAt(height).pow);
 }
 
 std::string CBlock::ToString() const
