@@ -1,12 +1,12 @@
 # Rincoin Core
 
-![Version](https://img.shields.io/badge/version-1.1.0--rc3-blue.svg)
+![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 [![RIPs](https://img.shields.io/badge/RIPs-rincoin--rips-blueviolet.svg)](https://github.com/Aevust/rincoin-rips)
 
 Rincoin is a decentralized digital currency derived from the Litecoin codebase (itself a long-established Bitcoin derivative) that introduces a new Proof-of-Work hashing algorithm called **RinHash**. RinHash is a hybrid PoW algorithm combining BLAKE3, Argon2d, and SHA3-256, designed to provide security while enabling broad, accessible participation during the network's formative phase. This README provides an overview of Rincoin's specifications, the RinHash algorithm, and network parameters.
 
-> **Release candidate: `v1.1.0-rc3`.** This tag is a candidate for **v1.1.0**, the *Customized Halving* release; it is published for testing and is not the final release. It supersedes `v1.1.0-rc2`, on which a legacy-version transaction accepted before the fork height stayed in the mempool after block 839,999 had connected; see "Changes since v1.1.0-rc2" in the release notes. Report issues at <https://github.com/Rin-coin/rincoin/issues>.
+> **v1.1.0** is the *Customized Halving* release. Its code is that of the release candidate `v1.1.0-rc3`; the two differ only in the version and the documentation. **Every node must run v1.1.0 before block 840,000.** Releases are published at <https://github.com/Rin-coin/rincoin/releases> with signed tags. Report issues at <https://github.com/Rin-coin/rincoin/issues>.
 >
 > Versions follow `v[GENERATION].[MAJOR].[MINOR]` per RIP-0001 (here: GENERATION=1, MAJOR=1, MINOR=0). The MAJOR field is incremented from the previous `v1.0.6` release because v1.1.0 carries protocol-level (hard fork) changes; per RIP-0001, a hard fork is not shipped as a maintenance (MINOR) release. See the **Release: v1.1.0** section below.
 
