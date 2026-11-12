@@ -413,6 +413,7 @@ enum class MemPoolRemovalReason {
     BLOCK,       //!< Removed for block
     CONFLICT,    //!< Removed for conflict with in-block transaction
     REPLACED,    //!< Removed for replacement
+    RIN3_FORK,   //!< Removed at the RIN3 fork height for lacking the nVersion marker (RIP-0009)
 };
 
 class SaltedTxidHasher
@@ -658,6 +659,14 @@ public:
     void removeForReorg(const CCoinsViewCache* pcoins, unsigned int nMemPoolHeight, int flags) EXCLUSIVE_LOCKS_REQUIRED(cs, cs_main);
     void removeConflicts(const CTransaction& tx) EXCLUSIVE_LOCKS_REQUIRED(cs);
     void removeForBlock(const CBlock& block, unsigned int nBlockHeight, DisconnectedBlockTransactions* disconnectpool) EXCLUSIVE_LOCKS_REQUIRED(cs);
+    /**
+     * Rincoin RIN3 fork (RIP-0009): remove every transaction that is not
+     * MWEB-only and does not carry CTransaction::RIN_FORK_TX_VERSION, together
+     * with all of its in-mempool descendants. Called by ConnectTip() each
+     * time the block before nRinHashForkHeight is connected. Returns the
+     * number of transactions removed.
+     */
+    unsigned int removeForRIN3Fork() EXCLUSIVE_LOCKS_REQUIRED(cs);
 
     void clear();
     void _clear() EXCLUSIVE_LOCKS_REQUIRED(cs); //lock free
@@ -858,7 +867,8 @@ private:
     void UpdateEntryForAncestors(txiter it, const setEntries &setAncestors) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** For each transaction being removed, update ancestors and any direct children.
       * If updateDescendants is true, then also update in-mempool descendants'
-      * ancestor state. */
+      * ancestor state. The caller removes every entry of entriesToRemove right
+      * after this returns (RemoveStaged(), removeForRIN3Fork()). */
     void UpdateForRemoveFromMempool(const setEntries &entriesToRemove, bool updateDescendants) EXCLUSIVE_LOCKS_REQUIRED(cs);
     /** Sever link between specified transaction and direct children. */
     void UpdateChildrenForRemoval(txiter entry) EXCLUSIVE_LOCKS_REQUIRED(cs);

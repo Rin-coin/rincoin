@@ -204,7 +204,7 @@ BASE_SCRIPTS = [
     'rpc_getblockfilter.py',
     'rpc_invalidateblock.py',
     'feature_rbf.py',
-    'ltc_replacebyfee.py',
+    'rin_replacebyfee.py',
     'mempool_packages.py',
     'mempool_package_onemore.py',
     'rpc_createmultisig.py',
@@ -245,6 +245,8 @@ BASE_SCRIPTS = [
     'wallet_scriptaddress2.py',
     'feature_dersig.py',
     'feature_cltv.py',
+    'feature_rin3_enforcement.py',
+    'feature_taproot_wallet_guard.py',
     'mweb_basic.py',
     'mweb_mining.py',
     'mweb_reorg.py',
@@ -256,6 +258,11 @@ BASE_SCRIPTS = [
     'mweb_wallet_upgrade.py',
     'wallet_listwallettransactions.py',
     'rpc_uptime.py',
+    'wallet_rin3_fund_version.py',
+    'wallet_rin3_boundary_rescue.py',
+    'mempool_rin3_fork_cleanup.py',
+    'mempool_rin3_fork_reorg.py',
+    'mempool_rin3_fork_mweb.py',
     'wallet_resendwallettransactions.py',
     'wallet_resendwallettransactions.py --descriptors',
     'wallet_fallbackfee.py',
@@ -286,6 +293,7 @@ BASE_SCRIPTS = [
     'rpc_scantxoutset.py',
     'feature_logging.py',
     'p2p_node_network_limited.py',
+    'p2p_rin3_services.py',
     'p2p_permissions.py',
     'feature_blocksdir.py',
     'wallet_startup.py',
@@ -450,8 +458,8 @@ def run_tests(*, test_list, src_dir, build_dir, tmpdir, jobs=1, enable_coverage=
     # Warn if bitcoind is already running
     try:
         # pgrep exits with code zero when one or more matching processes found
-        if subprocess.run(["pgrep", "-x", "litecoind"], stdout=subprocess.DEVNULL).returncode == 0:
-            print("%sWARNING!%s There is already a litecoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
+        if subprocess.run(["pgrep", "-x", "rincoind"], stdout=subprocess.DEVNULL).returncode == 0:
+            print("%sWARNING!%s There is already a rincoind process running on this system. Tests may fail unexpectedly due to resource contention!" % (BOLD[1], BOLD[0]))
     except OSError:
         # pgrep not supported
         pass
@@ -694,7 +702,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool|ltc|mweb)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool|rin|mweb)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:
@@ -725,7 +733,7 @@ class RPCCoverage():
     Coverage calculation works by having each test script subprocess write
     coverage files into a particular directory. These files contain the RPC
     commands invoked during testing, as well as a complete listing of RPC
-    commands per `litecoin-cli help` (`rpc_interface.txt`).
+    commands per `rincoin-cli help` (`rpc_interface.txt`).
 
     After all tests complete, the commands run are combined and diff'd against
     the complete list to calculate uncovered RPC commands.

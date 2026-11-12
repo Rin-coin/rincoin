@@ -63,7 +63,7 @@ def create_block(hashprev=None, coinbase=None, ntime=None, *, version=None, tmpl
     block = CBlock()
     if tmpl is None:
         tmpl = {}
-    block.nVersion = version or tmpl.get('version') or 1
+    block.nVersion = version or tmpl.get('version') or 4  # Default to 4 (BIP34/65/66-compliant)
     block.nTime = ntime or tmpl.get('curtime') or int(time.time() + 600)
     block.hashPrevBlock = hashprev or int(tmpl['previousblockhash'], 0x10)
     if tmpl and not tmpl.get('bits') is None:

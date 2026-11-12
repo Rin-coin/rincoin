@@ -9,7 +9,12 @@
  * network protocol versioning
  */
 
-static const int PROTOCOL_VERSION = 70017;
+//! Rincoin: 70018 = RIN3-aware release line (RIP-0009 P2P deployment).
+//! Capability itself is signaled via NODE_RIN3; the version bump is for
+//! telemetry (getpeerinfo / seeder crawl). MIN_PEER_PROTO_VERSION is
+//! intentionally NOT raised: RIN3 is a consensus tightening (soft fork)
+//! and legacy peers must remain connectable.
+static const int PROTOCOL_VERSION = 70018;
 
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;

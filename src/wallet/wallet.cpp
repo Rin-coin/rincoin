@@ -6,6 +6,7 @@
 #include <wallet/wallet.h>
 
 #include <chain.h>
+#include <chainparams.h>    // RIP-0011: Params(), Consensus::BIP9Deployment
 #include <consensus/consensus.h>
 #include <consensus/validation.h>
 #include <fs.h>
@@ -20,6 +21,7 @@
 #include <primitives/transaction.h>
 #include <script/descriptor.h>
 #include <script/script.h>
+#include <script/standard.h>  // RIP-0011: Solver(), TxoutType
 #include <script/signingprovider.h>
 #include <txmempool.h>
 #include <util/bip32.h>
@@ -697,7 +699,7 @@ bool CWallet::EncryptWallet(const SecureString& strWalletPassphrase)
 
         // MWEB: No need to replace HD seed, which would complicate MWEB key management.
         // So for now, we don't generate a new seed.
-        // 
+        //
         // If we are using descriptors, make new descriptors with a new seed
         //if (IsWalletFlagSet(WALLET_FLAG_DESCRIPTORS) && !IsWalletFlagSet(WALLET_FLAG_BLANK_WALLET)) {
         //    SetupDescriptorScriptPubKeyMans();
@@ -1310,8 +1312,12 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
     }
 
     // Handle transactions that were removed from the mempool because they
-    // conflict with transactions in a newly connected block.
-    if (reason == MemPoolRemovalReason::CONFLICT) {
+    // conflict with transactions in a newly connected block (CONFLICT), and
+    // those removed when the block before the RIN3 fork height was connected
+    // because they lack the nVersion marker (RIN3_FORK; RIP-0009,
+    // CTxMemPool::removeForRIN3Fork()). Such a transaction can be mined only
+    // in a block below nRinHashForkHeight, that is, only after a reorg below it.
+    if (reason == MemPoolRemovalReason::CONFLICT || reason == MemPoolRemovalReason::RIN3_FORK) {
         // Call SyncNotifications, so external -walletnotify notifications will
         // be triggered for these transactions. Set Status::UNCONFIRMED instead
         // of Status::CONFLICTED for a few reasons:
@@ -1321,16 +1327,21 @@ void CWallet::transactionRemovedFromMempool(const CTransactionRef& tx, MemPoolRe
         //    compatibility reasons it may not be not safe to store conflicted
         //    wallet transactions with a null block hash. See
         //    https://github.com/bitcoin/bitcoin/pull/18600#discussion_r420195993.
+        //    A RIN3_FORK removal has no conflicting block at all.
         // 2. For most of these transactions, the wallet's internal conflict
         //    detection in the blockConnected handler will subsequently call
         //    MarkConflicted and update them with CONFLICTED status anyway. This
         //    applies to any wallet transaction that has inputs spent in the
         //    block, or that has ancestors in the wallet with inputs spent by
-        //    the block.
+        //    the block. It does not apply to RIN3_FORK removals: the block does
+        //    not spend their inputs. They stay UNCONFIRMED, and their inputs
+        //    stay spent (IsSpent()), until they are abandoned, until a
+        //    transaction spending one of the same inputs is confirmed, or until
+        //    a reorg confirms them in a block below the fork height.
         // 3. Longstanding behavior since the sync implementation in
         //    https://github.com/bitcoin/bitcoin/pull/9371 and the prior sync
         //    implementation before that was to mark these transactions
-        //    unconfirmed rather than conflicted.
+        //    unconfirmed rather than conflicted. RIN3_FORK removals follow it.
         //
         // Nothing described above should be seen as an unchangeable requirement
         // when improving this code in the future. The wallet's heuristics for
@@ -1668,7 +1679,7 @@ CAmount CWallet::GetDebit(const CTransaction& tx, const boost::optional<MWEB::Wa
         if (!MoneyRange(nDebit))
             throw std::runtime_error(std::string(__func__) + ": value out of range");
     }
-    
+
     return nDebit;
 }
 
@@ -1746,7 +1757,7 @@ CAmount CWallet::GetChange(const CTransaction& tx, const boost::optional<MWEB::W
             nChange += pegout.GetAmount();
             if (!MoneyRange(nChange))
                 throw std::runtime_error(std::string(__func__) + ": value out of range");
-        
+
         }
     }
 
@@ -3117,6 +3128,23 @@ bool CWallet::FundTransaction(CMutableTransaction& tx, CAmount& nFeeRet, int& nC
         return false;
     }
 
+    // Rincoin RIN3 fork: CreateTransaction() chose the version of tx_new in
+    // wallet/txassembler.cpp, which switches to RIN_FORK_TX_VERSION once the
+    // wallet's last processed block is at nRinHashForkHeight - 1 or above.
+    // Carry it over, so that transactions funded through this path
+    // (fundrawtransaction, walletcreatefundedpsbt, send) carry the marker
+    // too. The fork height is not consulted here, so txassembler stays the
+    // only place in the wallet that decides when the version switches.
+    //
+    // Only the default version is replaced. A caller that set any other
+    // version keeps it, and setting the marker before funding relies on
+    // that. A caller that set CTransaction::CURRENT_VERSION itself cannot be
+    // told apart from one that left the default, and gets the wallet's
+    // version too.
+    if (tx.nVersion == CTransaction::CURRENT_VERSION) {
+        tx.nVersion = tx_new->nVersion;
+    }
+
     if (nChangePosInOut != -1) {
         tx.vout.insert(tx.vout.begin() + nChangePosInOut, tx_new->vout[nChangePosInOut]);
     }
@@ -3152,6 +3180,37 @@ bool CWallet::CreateTransaction(
         FeeCalculation& fee_calc_out,
         bool sign)
 {
+    // RIP-0011: refuse to create outputs paying to witness v1 (Taproot) or any
+    // later witness version while that deployment is sealed. Such outputs are
+    // anyone-can-spend at the consensus level. This is reachable from
+    // sendtoaddress, not only from the raw transaction APIs: DecodeDestination
+    // accepts genuine bech32m v1 addresses and maps them to WitnessUnknown,
+    // which GetScriptForDestination renders as OP_1 <program>.
+    //
+    // The deployment parameter is read directly rather than querying activation
+    // state: VersionBitsState requires cs_main, and cs_wallet is already held
+    // here (lock-order reversal).
+    const Consensus::Params& consensus = Params().GetConsensus();
+    if (consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime
+            == Consensus::BIP9Deployment::NEVER_ACTIVE) {
+        for (const CRecipient& recipient : vecSend) {
+            // StealthAddress recipients carry no script: GetScript() asserts on
+            // !IsMWEB(). Script-bearing MWEB constructs are classified by
+            // Solver() as WITNESS_MWEB_PEGIN / _HOGADDR before the
+            // WITNESS_UNKNOWN fallback.
+            if (recipient.IsMWEB()) continue;
+
+            std::vector<std::vector<unsigned char>> solutions;
+            const TxoutType type = Solver(recipient.receiver.GetScript(), solutions);
+            if (type == TxoutType::WITNESS_V1_TAPROOT || type == TxoutType::WITNESS_UNKNOWN) {
+                error = _("Cannot create an output paying to witness version 1 or "
+                          "later: this deployment is never activated on this "
+                          "network and such outputs are anyone-can-spend.");
+                return false;
+            }
+        }
+    }
+
     int nChangePosIn = nChangePosInOut;
 
     Optional<AssembledTx> tx1 = TxAssembler(*this).AssembleTx(vecSend, coin_control, nChangePosIn, sign, error);

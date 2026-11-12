@@ -321,9 +321,17 @@ enum ServiceFlags : uint64_t {
     NODE_MWEB_LIGHT_CLIENT = (1 << 23),
     // NODE_MWEB indicates that a node can be asked for blocks and transactions including
     // MWEB data.
-    NODE_MWEB = (1 << 24)
+    NODE_MWEB = (1 << 24),
 
-    // Bits 25-31 are reserved for temporary experiments. Just pick a bit that
+    // NODE_RIN3 indicates that the node enforces the RIN3 transaction
+    // nVersion rule (RIP-0009) and accepts/relays RIN_FORK_TX_VERSION
+    // transactions. Capability-bit pattern per NODE_WITNESS (BIP144)
+    // and NODE_MWEB (Litecoin). Bit 25 sits in the experiment-reserved
+    // band upstream; RIP-0009 allocates it permanently, the same step
+    // Litecoin took for bit 24. Advertised from v1.1.0 / proto 70018.
+    NODE_RIN3 = (1 << 25)
+
+    // Bits 26-31 are reserved for temporary experiments. Just pick a bit that
     // isn't getting used, or one not being used much, and notify the
     // bitcoin-development mailing list. Remember that service bits are just
     // unauthenticated advertisements, so your code must be robust against

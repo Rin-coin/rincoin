@@ -15,6 +15,7 @@
 #include <versionbitsinfo.h>
 
 #include <assert.h>
+#include <stdexcept>
 
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
@@ -59,30 +60,30 @@ static CBlock CreateGenesisBlock(const char* pszTimestamp, const CScript& genesi
  static CBlock CreateMainGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
  {
      const char* pszTimestamp = "RinCoin Genesis Block - RinHash Launch";
-     const CScript genesisOutputScript = CScript() 
+     const CScript genesisOutputScript = CScript()
          << ParseHex("04678afdb0fe5548271967f1a67130b7105cd6a828e03909a67962e0ea1f61deb649f6bc3f4cef38c4f35504e51ec112de5c384df7ba0b8d578a4c702b6bf11d5f")
          << OP_CHECKSIG;
- 
+
      return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
  }
 
  static CBlock CreateTestNetGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
  {
      const char* pszTimestamp = "RinCoin Genesis Block - RinHash Test1";
-     const CScript genesisOutputScript = CScript() 
+     const CScript genesisOutputScript = CScript()
          << ParseHex("049dcc1230171f40b336c78b70c32ff5109172a9e30d577e4071fb69e30ee40be7732aeaaf5497bf230a4640406a9c1b7c785732c380cd604bfa06802a1ba3894a")
          << OP_CHECKSIG;
- 
+
      return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
  }
 
  static CBlock CreateRegTestGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount& genesisReward)
  {
      const char* pszTimestamp = "RinCoin Genesis Block - RinHash RegTest1";
-     const CScript genesisOutputScript = CScript() 
+     const CScript genesisOutputScript = CScript()
          << ParseHex("04b1c2d3e4f5a6b7c8d9eaf1b2c3d4e5f6a7b8c9dae1f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9eaf1b2c3d4e5f6a7b8c9dae1f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1")
          << OP_CHECKSIG;
- 
+
      return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward);
  }
 
@@ -95,6 +96,11 @@ public:
         strNetworkID = CBaseChainParams::MAIN;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
+        // Scales the entire emission schedule. GetBlockSubsidy() derives every
+        // Customized Halving phase boundary from this single value (RIP-0002):
+        // Phase 4 = 4x, Phase 5 = 10x, Phase 6 = 20x, Terminal = 30x.
+        // Therefore 4 * nSubsidyHalvingInterval is the Customized Halving
+        // hard-fork height, and MUST equal nRinHashForkHeight (RIP-0009).
         consensus.nSubsidyHalvingInterval = 210000;
         consensus.BIP16Height = 26500; // 87afb798a3ad9378fcd56123c81fb31cfd9a8df4719b9774d71730c16315a092 - October 1, 2012
         consensus.BIP34Height = 26500;
@@ -109,22 +115,32 @@ public:
         consensus.nPowTargetSpacing = 60;
         consensus.fPowAllowMinDifficultyBlocks = false;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 6048; // 75% of 8064
-        consensus.nMinerConfirmationWindow = 8064; // nPowTargetTimespan / nPowTargetSpacing * 4
+        consensus.nRuleChangeActivationThreshold = 5940; // 75% of 7920
+        consensus.nMinerConfirmationWindow = 7920; // nPowTargetTimespan / nPowTargetSpacing * 4
         consensus.DGWHeight = 30000; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
+        consensus.nRinHashForkHeight = 840000; // RIN3 nVersion replay protection
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // Deployment of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartHeight = 2161152; // End November 2021
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeoutHeight = 2370816; // 364 days later
+        // Intentionally deferred: Litecoin's height-based Taproot activation
+        // (nStartHeight=2161152) is incompatible with Rincoin's
+        // nMinerConfirmationWindow=7920 (Litecoin uses 8064; Rincoin uses 7920
+        // due to 60s blocks and 33h retarget timespan).
+        // Taproot activation may be revisited via a future RIP; for now follow
+        // the same "intentionally deferred" pattern as MWEB.
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // Deployment of MWEB (LIP-0002, LIP-0003, and LIP-0004)
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].bit = 4;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartHeight = 2217600; // End Feb 2022
-        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2427264; // 364 days later
+        // Intentionally deferred: activated in a future release after SQLite
+        // descriptor wallet integration completes. Avoids creating BDB-locked
+        // MWEB key data requiring complex migration. (Testnet: Block 840)
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         consensus.nMinimumChainWork = uint256S("0x00");
         consensus.defaultAssumeValid = uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db");
@@ -149,15 +165,23 @@ public:
         assert(consensus.hashGenesisBlock == uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db"));
         assert(genesis.hashMerkleRoot == uint256S("0x8590c08530d2ed422b726a938f07df8f380671569e04dcb556dcb9601c47cdad"));
 
-        
+        // RIP-0002 / RIP-0009: the CH fork height is 4x the halving interval.
+        assert(consensus.nRinHashForkHeight == 4 * consensus.nSubsidyHalvingInterval);
+
+        // Whitepaper v1.6.4 Sec.3 Scenario II: S_max = 168,000,000 RIN. The
+        // supply cap derived from the halving interval must equal the MAX_MONEY
+        // sanity bound in amount.h. Mainnet only: scaled networks intentionally
+        // derive a smaller cap (168,000 RIN at interval 210).
+        assert(SUPPLY_CAP_PER_INTERVAL * (int64_t)consensus.nSubsidyHalvingInterval == MAX_MONEY);
+
         // Note that of those which support the service bits prefix, most only support a subset of
         // possible options.
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        
-        vSeeds.emplace_back("seed.rincoin.net");  // official DNS seeder 1
-        vSeeds.emplace_back("seed.rincoin.org");  // official DNS seeder 2
+
+        vSeeds.emplace_back("seed.rincoin.org"); // official DNS seeder 1
+        vSeeds.emplace_back("seed.rincoin.net"); // official DNS seeder 2
 
         base58Prefixes[PUBKEY_ADDRESS] = {60};  // "R..."
         base58Prefixes[SCRIPT_ADDRESS] = {122}; // "r..."
@@ -309,7 +333,6 @@ public:
             /* nTxCount */ 1,          // Only the Genesis coinbase
             /* dTxRate  */ 0.0         // Actually, there are no transactions yet
         };
-        
     }
 };
 
@@ -322,36 +345,38 @@ public:
         strNetworkID = CBaseChainParams::TESTNET;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 210000;
+        // 1/1000 scale; 4x = 840 must match nRinHashForkHeight. See CMainParams.
+        consensus.nSubsidyHalvingInterval = 210;
         consensus.BIP16Height = 0; // always enforce P2SH BIP16 on testnet
         consensus.BIP34Height = 76;
         consensus.BIP34Hash = uint256S("8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573");
         consensus.BIP65Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
         consensus.BIP66Height = 76; // 8075c771ed8b495ffd943980a95f702ab34fce3c8c54e379548bda33cc8c0573
-        consensus.CSVHeight = 6048; // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
-        consensus.SegwitHeight = 6048; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
-        consensus.MinBIP9WarningHeight = 8064; // segwit activation height + miner confirmation window
+        consensus.CSVHeight = 6; // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
+        consensus.SegwitHeight = 6; // 00000000002b980fcd729daaa248fd9316a5200e9b367f4ff2c42453e84201ca
+        consensus.MinBIP9WarningHeight = 216; // segwit activation height + miner confirmation window
         consensus.powLimit = uint256S("0000ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 33 * 60 * 60; // 33hour
         consensus.nPowTargetSpacing = 60;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = false;
-        consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
-        consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
-        consensus.DGWHeight = 100; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
+        consensus.nRuleChangeActivationThreshold = 158; // 75% for testchains
+        consensus.nMinerConfirmationWindow = 210; // nPowTargetTimespan / nPowTargetSpacing
+        consensus.DGWHeight = 0; // Dark Gravity Wave (DGW) difficulty adjustment algorithm
+        consensus.nRinHashForkHeight = 840; // RIN3 testnet activation height
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // Deployment of Taproot (BIPs 340-342)
         consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].bit = 2;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartHeight = 2225664; // March 2022
-        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeoutHeight = 2435328; // 364 days later
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nStartTime = Consensus::BIP9Deployment::ALWAYS_ACTIVE;
+        consensus.vDeployments[Consensus::DEPLOYMENT_TAPROOT].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
 
         // Deployment of MWEB (LIP-0002, LIP-0003, and LIP-0004)
         consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].bit = 4;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartHeight = 2209536; // Jan/Feb 2022
-        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 2419200; // 364 days later
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nStartHeight = 840; // 1/1000 scale
+        consensus.vDeployments[Consensus::DEPLOYMENT_MWEB].nTimeoutHeight = 1050; // 840 + 210 (1 interval)
 
         consensus.nMinimumChainWork = uint256S("0x00");
         consensus.defaultAssumeValid = uint256S("0x000096bdd6e4613ca89b074ebd6f609aba6fe3f868b34ee79380aa3bc7a8c9db");
@@ -369,6 +394,9 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x00009d5fbc8579e8b4292f1bab22437d9468c0cc615cb5b0242d8159b31760ad"));
         assert(genesis.hashMerkleRoot == uint256S("0x7a2a292324679fdd5b843a9daf72acc7b2801ab95321e863e545f69ced707b0e"));
+
+        // RIP-0002 / RIP-0009: the CH fork height is 4x the halving interval.
+        assert(consensus.nRinHashForkHeight == 4 * consensus.nSubsidyHalvingInterval);
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -414,7 +442,8 @@ public:
         strNetworkID =  CBaseChainParams::REGTEST;
         consensus.signet_blocks = false;
         consensus.signet_challenge.clear();
-        consensus.nSubsidyHalvingInterval = 150;
+        // 1/1000 scale; 4x = 840 must match nRinHashForkHeight. See CMainParams.
+        consensus.nSubsidyHalvingInterval = 210;
         consensus.BIP16Height = 0;
         consensus.BIP34Height = 500; // BIP34 activated on regtest (Used in functional tests)
         consensus.BIP34Hash = uint256();
@@ -425,6 +454,7 @@ public:
         consensus.MinBIP9WarningHeight = 0;
         consensus.powLimit = uint256S("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.DGWHeight = std::numeric_limits<int>::max();  // Turns off Dark Gravity Wave (DGW) difficulty adjustment algorithm for regtest
+        consensus.nRinHashForkHeight = 840; // RIN3 regtest activation height
         consensus.nPowTargetTimespan = 33 * 60 * 60; // 33hour
         consensus.nPowTargetSpacing = 60 * 50;
         consensus.fPowAllowMinDifficultyBlocks = true;
@@ -463,7 +493,10 @@ public:
         consensus.hashGenesisBlock = genesis.GetHash();
         assert(consensus.hashGenesisBlock == uint256S("0x7d2c8c57ce2597f86c9fe41f9865ad664b04d2aad4321fdaab48ed3da1805fe7"));
         assert(genesis.hashMerkleRoot == uint256S("0xe3c12cbf8b33dc3a00cbe56699682fa6b2f7b03b981539dd079394df8315ff12"));
-        
+
+        // RIP-0002 / RIP-0009: the CH fork height is 4x the halving interval.
+        assert(consensus.nRinHashForkHeight == 4 * consensus.nSubsidyHalvingInterval);
+
         vFixedSeeds.clear(); //!< Regtest mode doesn't have any fixed seeds.
         vSeeds.clear();      //!< Regtest mode doesn't have any DNS seeds.
 
@@ -529,7 +562,8 @@ void CRegTestParams::UpdateActivationParametersFromArgs(const ArgsManager& args)
         if (vDeploymentParams.size() < 3 || 5 < vDeploymentParams.size()) {
             throw std::runtime_error("Version bits parameters malformed, expecting deployment:start:end[:heightstart:heightend]");
         }
-        int64_t nStartTime, nTimeout, nStartHeight, nTimeoutHeight;
+        int64_t nStartTime, nTimeout;
+        int64_t nStartHeight = 0, nTimeoutHeight = 0;   // RIN: explicit zero-init
         if (!ParseInt64(vDeploymentParams[1], &nStartTime)) {
             throw std::runtime_error(strprintf("Invalid nStartTime (%s)", vDeploymentParams[1]));
         }

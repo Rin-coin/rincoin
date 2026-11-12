@@ -5,6 +5,7 @@
 
 #include <txmempool.h>
 
+#include <chainparams.h>
 #include <consensus/consensus.h>
 #include <consensus/tx_verify.h>
 #include <consensus/validation.h>
@@ -310,6 +311,20 @@ void CTxMemPool::UpdateForRemoveFromMempool(const setEntries &entriesToRemove, b
         // we use the cached notion of ancestor transactions as the set of
         // things to update for removal.
         CalculateMemPoolAncestors(entry, setAncestors, nNoLimit, nNoLimit, nNoLimit, nNoLimit, dummy, false);
+        // An ancestor that is itself in entriesToRemove is erased by the same
+        // call (RemoveStaged() or removeForRIN3Fork()), so its descendant state
+        // is not used again (CalculateMemPoolAncestors() above only compares it
+        // against nNoLimit): skip the mapTx.modify() for it. The parent/child
+        // links are still severed by UpdateAncestorsOf() and
+        // UpdateChildrenForRemoval(). Without this, removing a set of long
+        // chains re-indexes every ancestor once per descendant.
+        for (auto a = setAncestors.begin(); a != setAncestors.end();) {
+            if (entriesToRemove.count(*a)) {
+                a = setAncestors.erase(a);
+            } else {
+                ++a;
+            }
+        }
         // Note that UpdateAncestorsOf severs the child links that point to
         // removeIt in the entries for the parents of removeIt.
         UpdateAncestorsOf(false, removeIt, setAncestors);
@@ -667,6 +682,61 @@ void CTxMemPool::removeForBlock(const CBlock& block, unsigned int nBlockHeight, 
     }
 }
 
+/**
+ * Rincoin RIN3 fork (RIP-0009). ConnectTip() calls this each time the block
+ * before nRinHashForkHeight is connected, after removeForBlock(). From the next
+ * block on, ContextualCheckBlock() rejects any transaction other than the
+ * coinbase, the HogEx and MWEB-only ones that does not carry
+ * RIN_FORK_TX_VERSION, so such a transaction left in the mempool can be mined
+ * only in a block below nRinHashForkHeight, that is, only after a reorg below
+ * it, and the same holds for anything that spends its outputs.
+ *
+ * Descendants are removed, and their removal is notified, before their
+ * ancestors (higher ancestor count first; in a consistent mempool a child
+ * always counts more ancestors than its parent). A wallet that sees a
+ * transaction leave the mempool has then already seen its descendants leave,
+ * so it never abandons one while a descendant still counts as in the mempool
+ * (CWallet::AbandonTransaction() asserts that).
+ */
+unsigned int CTxMemPool::removeForRIN3Fork()
+{
+    AssertLockHeld(cs);
+    const int64_t start_us = GetTimeMicros();
+    setEntries unmarked;
+    for (txiter it = mapTx.begin(); it != mapTx.end(); ++it) {
+        const CTransaction& tx = it->GetTx();
+        if (!tx.IsMWEBOnly() && tx.nVersion != CTransaction::RIN_FORK_TX_VERSION) {
+            unmarked.insert(it);
+        }
+    }
+    setEntries stage;
+    for (txiter it : unmarked) {
+        CalculateDescendants(it, stage);
+    }
+    std::vector<txiter> order(stage.begin(), stage.end());
+    std::sort(order.begin(), order.end(), [](txiter a, txiter b) {
+        if (a->GetCountWithAncestors() != b->GetCountWithAncestors()) {
+            return a->GetCountWithAncestors() > b->GetCountWithAncestors();
+        }
+        return a->GetTx().GetHash() < b->GetTx().GetHash();
+    });
+    uint64_t removed_vsize = 0;
+    for (txiter it : order) {
+        removed_vsize += it->GetTxSize();
+        LogPrint(BCLog::MEMPOOL, "RIN3 fork: removing %s (nVersion 0x%08x%s) from the mempool\n",
+                 it->GetTx().GetHash().ToString(), static_cast<uint32_t>(it->GetTx().nVersion),
+                 unmarked.count(it) ? "" : ", spends a removed transaction");
+    }
+    UpdateForRemoveFromMempool(stage, false);
+    for (txiter it : order) {
+        removeUnchecked(it, MemPoolRemovalReason::RIN3_FORK);
+    }
+    LogPrintf("RIN3 fork: removed %u transaction(s) without the nVersion marker and %u descendant(s) of them from the mempool (%u vbytes, %.1f ms)\n",
+              static_cast<unsigned int>(unmarked.size()), static_cast<unsigned int>(stage.size() - unmarked.size()),
+              removed_vsize, (GetTimeMicros() - start_us) * 0.001);
+    return static_cast<unsigned int>(stage.size());
+}
+
 void CTxMemPool::_clear()
 {
     mapTx.clear();
@@ -711,6 +781,11 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
 
     CCoinsViewCache mempoolDuplicate(const_cast<CCoinsViewCache*>(pcoins));
     const int64_t spendheight = GetSpendHeight(mempoolDuplicate);
+    // Rincoin RIN3 fork (RIP-0009): once the next block is at or above
+    // nRinHashForkHeight, the mempool holds no transaction that block could
+    // not include for lack of the nVersion marker (PreChecks(), and
+    // removeForRIN3Fork() when the block before the fork height is connected).
+    const bool rin3_enforced = spendheight >= Params().GetConsensus().nRinHashForkHeight;
 
     std::list<const CTxMemPoolEntry*> waitingOnDependants;
     for (indexed_transaction_set::const_iterator it = mapTx.begin(); it != mapTx.end(); it++) {
@@ -718,6 +793,9 @@ void CTxMemPool::check(const CCoinsViewCache *pcoins) const
         checkTotal += it->GetTxSize();
         innerUsage += it->DynamicMemoryUsage();
         const CTransaction& tx = it->GetTx();
+        if (rin3_enforced) {
+            assert(tx.IsMWEBOnly() || tx.nVersion == CTransaction::RIN_FORK_TX_VERSION);
+        }
         innerUsage += memusage::DynamicUsage(it->GetMemPoolParentsConst()) + memusage::DynamicUsage(it->GetMemPoolChildrenConst());
         bool fDependsWait = false;
         CTxMemPoolEntry::Parents setParentCheck;

@@ -598,12 +598,37 @@ bool MemPoolAccept::PreChecks(ATMPArgs& args, Workspace& ws)
     // HogEx is only valid in a block, not as a loose transaction
     if (tx.IsHogEx())
         return state.Invalid(TxValidationResult::TX_CONSENSUS, "hogex");
-		
+
     // Rather not work on nonstandard transactions (unless -testnet/-regtest)
     std::string reason;
     if (fRequireStandard && !IsStandardTx(tx, reason))
         return state.Invalid(TxValidationResult::TX_NOT_STANDARD, reason);
 
+    // Rincoin RIN3: mempool-level enforcement (prevents Mempool Zombie DoS).
+    // Coinbase (L595) and HogEx (L599) are already rejected above; only
+    // user txs and MWEBOnly reach here. MWEBOnly is exempt (same as
+    // ContextualCheckBlock). At next-block height >= nRinHashForkHeight,
+    // legacy-nVersion txs can never be mined — block them at entry.
+    //
+    // Classified TX_RECENT_CONSENSUS_CHANGE, not TX_CONSENSUS. RIN3 is a
+    // consensus rule newer than SegWit, which is precisely what that enum
+    // value is reserved for. MaybePunishNodeForTx scores TX_CONSENSUS at
+    // 100 — instant discouragement — while TX_RECENT_CONSENSUS_CHANGE
+    // carries no score. A peer relaying a pre-fork legacy tx across the
+    // boundary (an honest node with mempool residue, or a non-upgraded
+    // node following our chain) must not be disconnected for it; with
+    // 60-second blocks the recentRejects filter re-arms every tip change,
+    // so the punishment would recur rather than fire once. The tx is
+    // still rejected and never mined — only the DoS score differs.
+    // ContextualCheckBlock retains BLOCK_CONSENSUS. See RIP-0009 §3.
+    if (!tx.IsMWEBOnly()) {
+        const int next_height = ::ChainActive().Tip()->nHeight + 1;
+        if (next_height >= args.m_chainparams.GetConsensus().nRinHashForkHeight
+            && tx.nVersion != CTransaction::RIN_FORK_TX_VERSION) {
+            return state.Invalid(TxValidationResult::TX_RECENT_CONSENSUS_CHANGE,
+                                  "bad-tx-rinhash-version");
+        }
+    }
     // Do not work on transactions that are too small.
     // A transaction with 1 segwit input and 1 P2WPHK output has non-witness size of 82 bytes.
     // Transactions smaller than this are not relayed to mitigate CVE-2017-12842 by not relaying
@@ -1270,15 +1295,76 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams)
 {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64)
-        return 0;
+    // Rincoin Customized Halving Schedule (Scenario II)
+    // Phase boundaries are expressed as multiples of nSubsidyHalvingInterval.
+    // This dynamic scaling allows Mainnet (interval=210,000) and Regtest
+    // (interval=210) to share the same consensus rule with proportional timing.
+    //
+    // Mainnet schedule (interval = 210,000):
+    //   Phase 0 (0 ~ 209,999):              50    RIN  [interval×0 .. ×1)
+    //   Phase 1 (210,000 ~ 419,999):        25    RIN  [interval×1 .. ×2)
+    //   Phase 2 (420,000 ~ 629,999):        12.5  RIN  [interval×2 .. ×3)
+    //   Phase 3 (630,000 ~ 839,999):         6.25 RIN  [interval×3 .. ×4)
+    //   Phase 4 (840,000 ~ 2,099,999):       4    RIN  [interval×4 .. ×10) ← CH activated
+    //   Phase 5 (2,100,000 ~ 4,199,999):     2    RIN  [interval×10 .. ×20)
+    //   Phase 6 (4,200,000 ~ 6,299,999):     1    RIN  [interval×20 .. ×30)
+    //   Terminal (6,300,000 ~ perpetual):    0.6  RIN  [interval×30 .. ∞)
+    const int interval = consensusParams.nSubsidyHalvingInterval;
 
+    // Phase 4+: explicit piecewise schedule (Customized Halving)
+    if (nHeight >= 30 * interval) return CAmount(60000000);  // Terminal: 0.6 RIN
+    if (nHeight >= 20 * interval) return 1 * COIN;           // Phase 6
+    if (nHeight >= 10 * interval) return 2 * COIN;           // Phase 5
+    if (nHeight >=  4 * interval) return 4 * COIN;           // Phase 4 [CH]
+
+    // Phase 0-3: standard halving via bit shift
+    int halvings = nHeight / interval;
     CAmount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
+}
+
+CAmount GetSupplyCap(const Consensus::Params& consensusParams)
+{
+    return SUPPLY_CAP_PER_INTERVAL * (int64_t)consensusParams.nSubsidyHalvingInterval;
+}
+
+/** Cumulative scheduled subsidy for blocks [0, nHeight), in satoshi,
+ *  clamped at the derived supply cap.
+ *
+ *  Closed form over the Customized Halving phase boundaries (RIP-0002):
+ *  no chainstate access, no CBlockIndex field, reorg-safe. Unit tests
+ *  pin this against a brute-force sum of GetBlockSubsidy() so the two
+ *  cannot drift apart.
+ *
+ *  Accounting only: emission is still governed solely by
+ *  GetBlockSubsidy(). Enforcement of the cap is deferred to a future
+ *  RIP (see whitepaper v1.6.4 Sec.3 Scenario II, t_trans).
+ */
+CAmount GetTotalSubsidy(int nHeight, const Consensus::Params& consensusParams)
+{
+    if (nHeight <= 0) return 0;
+    const int64_t interval = consensusParams.nSubsidyHalvingInterval;
+    const int64_t h = nHeight;
+    CAmount nTotal = 0;
+    // Phases 0-3: 50 -> 25 -> 12.5 -> 6.25 RIN, one interval each
+    for (int k = 0; k < 4; ++k) {
+        const int64_t lo = k * interval;
+        const int64_t hi = std::min(h, (k + 1) * interval);
+        if (hi > lo) nTotal += (hi - lo) * ((50 * COIN) >> k);
+    }
+    // Phase 4 [4I,10I): 4 RIN
+    { const int64_t lo = 4*interval, hi = std::min(h, 10*interval);
+      if (hi > lo) nTotal += (hi - lo) * (4 * COIN); }
+    // Phase 5 [10I,20I): 2 RIN
+    { const int64_t lo = 10*interval, hi = std::min(h, 20*interval);
+      if (hi > lo) nTotal += (hi - lo) * (2 * COIN); }
+    // Phase 6 [20I,30I): 1 RIN
+    { const int64_t lo = 20*interval, hi = std::min(h, 30*interval);
+      if (hi > lo) nTotal += (hi - lo) * (1 * COIN); }
+    // Terminal [30I, h): 0.6 RIN
+    if (h > 30*interval) nTotal += (h - 30*interval) * CAmount(60000000);
+    return std::min(nTotal, GetSupplyCap(consensusParams));
 }
 
 CoinsViews::CoinsViews(
@@ -1951,7 +2037,7 @@ static unsigned int GetBlockScriptFlags(const CBlockIndex* pindex, const Consens
     AssertLockHeld(cs_main);
 
     unsigned int flags = SCRIPT_VERIFY_NONE;
-    
+
     // Start enforcing P2SH (BIP16)
     if (pindex->nHeight >= consensusparams.BIP16Height) {
         flags |= SCRIPT_VERIFY_P2SH;
@@ -2091,7 +2177,7 @@ bool CChainState::ConnectBlock(const CBlock& block, BlockValidationState& state,
     // Now that the whole chain is irreversibly beyond that time it is applied to all blocks except the
     // two in the chain that violate it. This prevents exploiting the issue against nodes during their
     // initial block download.
-    
+
     bool fEnforceBIP30 = true;
     //bool fEnforceBIP30 = !((pindex->nHeight==91842 && pindex->GetBlockHash() == uint256S("0x00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec")) ||
     //                       (pindex->nHeight==91880 && pindex->GetBlockHash() == uint256S("0x00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721")));
@@ -2735,6 +2821,18 @@ bool CChainState::ConnectTip(BlockValidationState& state, const CChainParams& ch
     LogPrint(BCLog::BENCH, "  - Writing chainstate: %.2fms [%.2fs (%.2fms/blk)]\n", (nTime5 - nTime4) * MILLI, nTimeChainState * MICRO, nTimeChainState * MILLI / nBlocksTotal);
     // Remove conflicting transactions from the mempool.;
     m_mempool.removeForBlock(blockConnecting, pindexNew->nHeight, &disconnectpool);
+    // Rincoin RIN3 fork (RIP-0009): the next block is at nRinHashForkHeight,
+    // from which a transaction without the nVersion marker cannot be mined
+    // (ContextualCheckBlock()). Remove those still in the mempool, with their
+    // descendants. This must follow removeForBlock(): a transaction this block
+    // confirmed has left the mempool by then, so its in-mempool children that
+    // carry the marker are kept. PreChecks() refuses such transactions once
+    // the tip is at this height or above, so connecting this height is the
+    // only transition that can carry them to such a tip. This runs each time
+    // this height is connected, including after a reorg or invalidateblock.
+    if (pindexNew->nHeight + 1 == chainparams.GetConsensus().nRinHashForkHeight) {
+        m_mempool.removeForRIN3Fork();
+    }
     // Update m_chain & related variables.
     m_chain.SetTip(pindexNew);
     UpdateTip(m_mempool, pindexNew, chainparams);
@@ -3812,6 +3910,23 @@ static bool ContextualCheckBlock(const CBlock& block, BlockValidationState& stat
         return false;
     }
 
+    // Rincoin RIN3 fork: enforce RIN_FORK_TX_VERSION on user transactions.
+    // Exemptions: coinbase (miner reward), HogEx (MWEB integration tx),
+    // and MWEBOnly (MWEB-to-MWEB tx) — all are system-generated, not
+    // replay-attack targets.
+    if (nHeight >= consensusParams.nRinHashForkHeight) {
+        for (const auto& tx : block.vtx) {
+            if (tx->IsCoinBase()) continue;
+            if (tx->IsHogEx()) continue;
+            if (tx->IsMWEBOnly()) continue;
+            if (tx->nVersion != CTransaction::RIN_FORK_TX_VERSION) {
+                return state.Invalid(BlockValidationResult::BLOCK_CONSENSUS,
+                                     "bad-tx-rinhash-version",
+                                     "tx nVersion does not match required RinHash fork version");
+            }
+        }
+    }
+
     return true;
 }
 
@@ -4148,7 +4263,7 @@ bool ChainstateManager::ProcessNewBlockHeaders(const std::vector<CBlockHeader>& 
         auto batch_end = std::chrono::steady_clock::now();
         int64_t batch_us = std::chrono::duration_cast<std::chrono::microseconds>(batch_end - batch_start).count();
         if (hdr_count > 0) {
-            LogPrintf("HEADERSYNC-PERF: batch=%d new=%d dup=%d total=%lldus "
+            LogPrint(BCLog::BENCH, "HEADERSYNC-PERF: batch=%d new=%d dup=%d total=%lldus "
                       "phase1=%lldus(%.1f%%) dgw_parallel=%lldus(%.1f%%) "
                       "per_hdr=%lldus\n",
                       hdr_count, new_count, dup_count, batch_us,

@@ -110,6 +110,7 @@ protected:
      * - REORG (removed during a reorg)
      * - CONFLICT (removed because it conflicts with in-block transaction)
      * - REPLACED (removed due to RBF replacement)
+     * - RIN3_FORK (removed when the block before the RIN3 fork height is connected, for lacking the nVersion marker; RIP-0009)
      *
      * This does not fire for transactions that are removed from the mempool
      * because they have been included in a block. Any client that is interested

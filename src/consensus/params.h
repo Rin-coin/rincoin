@@ -101,6 +101,9 @@ struct Params {
     bool signet_blocks{false};
     std::vector<uint8_t> signet_challenge;
     int DGWHeight;
+    /** Block height at which RIN3 nVersion replay protection becomes mandatory.
+     *  Default = INT_MAX (effectively disabled) until explicitly set in chainparams. */
+    int nRinHashForkHeight{std::numeric_limits<int>::max()};
 };
 } // namespace Consensus
 

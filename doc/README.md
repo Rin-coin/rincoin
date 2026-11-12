@@ -1,40 +1,50 @@
-Litecoin Core
+Rincoin Core
 =============
 
 Setup
 ---------------------
-Litecoin Core is the original Litecoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Litecoin transactions, which requires approximately 22 gigabytes of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+Rincoin Core is the reference Rincoin client and forms the backbone of the network. It downloads and, by default, stores the entire history of Rincoin transactions.
 
-To download Litecoin Core, visit [litecoin.org](https://litecoin.org/).
+Rincoin is derived from Bitcoin via Litecoin, with the following key differences:
+
+- **Proof-of-Work**: RinHash (BLAKE3 → Argon2d → SHA3-256) — CPU-friendly
+- **Block time**: 60 seconds
+- **Hard cap**: 168,000,000 RIN
+- **Customized Halving (CH)**: Block 840,000 dilation (6.25 → 4.00 RIN)
+- **MWEB**: Mainnet `NEVER_ACTIVE` (sealed until preconditions are met)
+
+To download Rincoin Core, visit [rincoin.org](https://rincoin.org/) or the [GitHub Releases](https://github.com/Rin-coin/rincoin/releases) page.
 
 Running
 ---------------------
-The following are some helpful notes on how to run Litecoin Core on your native platform.
+The following are notes on how to run Rincoin Core on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/litecoin-qt` (GUI) or
-- `bin/litecoind` (headless)
+- `bin/rincoin-qt` (GUI) or
+- `bin/rincoind` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run litecoin-qt.exe.
+Unpack the files into a directory, and then run `rincoin-qt.exe`.
 
 ### macOS
 
-Drag Litecoin Core to your applications folder, and then run Litecoin Core.
+Drag Rincoin Core to your Applications folder, and then run Rincoin Core.
 
 ### Need Help?
 
-* See the documentation at the [Litecoin Wiki](https://litecoin.info/) for help and more information.
-* Ask for help on [#litecoin](https://webchat.freenode.net/#litecoin) on Freenode. If you don't have an IRC client, use [webchat here](https://webchat.freenode.net/#litecoin).
-* Ask for help on the [LitecoinTalk](https://litecointalk.io/) forums, in the [Technical Support board](https://litecointalk.io/c/technical-support).
+- See the [Rincoin Whitepaper](https://doi.org/10.5281/zenodo.17141922)
+  for protocol specifications.
+- Open an issue on the [GitHub repository](https://github.com/Rin-coin/rincoin/issues).
+- Join the discussion on the [Rincoin Discord](https://discord.gg/H4Du5YuqFa)
+  (community-operated).
 
 Building
 ---------------------
-The following are developer notes on how to build Litecoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build Rincoin Core on your native platform. They are not complete guides, but include notes on necessary libraries, compile flags, etc.
 
 - [Dependencies](dependencies.md)
 - [macOS Build Notes](build-osx.md)
@@ -43,33 +53,42 @@ The following are developer notes on how to build Litecoin Core on your native p
 - [FreeBSD Build Notes](build-freebsd.md)
 - [OpenBSD Build Notes](build-openbsd.md)
 - [NetBSD Build Notes](build-netbsd.md)
-- [Gitian Building Guide (External Link)](https://github.com/bitcoin-core/docs/blob/master/gitian-building.md)
 
 Development
 ---------------------
-The Litecoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The Rincoin repo's [root README](/README.md) contains relevant
+information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Productivity Notes](productivity.md)
-- [Release Notes](release-notes.md)
+- [Release Notes](release-notes/README.md)
 - [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://doxygen.bitcoincore.org/)
+- [Source Code Documentation (External)](https://doxygen.bitcoincore.org/)
 - [Translation Process](translation_process.md)
 - [Translation Strings Policy](translation_strings_policy.md)
 - [JSON-RPC Interface](JSON-RPC-interface.md)
 - [Unauthenticated REST Interface](REST-interface.md)
 - [Shared Libraries](shared-libraries.md)
-- [BIPS](bips.md)
-- [Dnsseed Policy](dnsseed-policy.md)
+- [BIPs](bips.md)
+- [RIPs (Rincoin Improvement Proposals)](https://github.com/Rin-coin/rips)
+- [DNS Seed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
 
-### Resources
-* Discuss on the [LitecoinTalk](https://litecointalk.io/) forums.
-* Discuss general Litecoin development on #litecoin-dev on Freenode. If you don't have an IRC client, use [webchat here](https://webchat.freenode.net/#litecoin-dev).
+### Rincoin-Sim (1/1000-scale test environment)
 
-### Miscellaneous
+- [Build & Test Guide (v1.0.7)](release-notes/rincoin-sim/v1.0.7-build-guide.md)
+- [Test Evidence Archive](release-notes/rincoin-sim/EVIDENCE.md)
+
+### Resources
+
+- [Rincoin Whitepaper](https://doi.org/10.5281/zenodo.17141922)
+- [RIPs Repository](https://github.com/Rin-coin/rips)
+- [GitHub Discussions](https://github.com/Rin-coin/rincoin/discussions)
+
+Miscellaneous
+---------------------
 - [Assets Attribution](assets-attribution.md)
-- [bitcoin.conf Configuration File](bitcoin-conf.md)
+- [rincoin.conf Configuration File](rincoin-conf.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
 - [Reduce Memory](reduce-memory.md)
@@ -78,6 +97,7 @@ The Litecoin repo's [root README](/README.md) contains relevant information on t
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [ZMQ](zmq.md)
 - [PSBT support](psbt.md)
+- [MWEB (Privacy Layer, currently sealed)](mweb.md)
 
 License
 ---------------------

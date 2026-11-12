@@ -242,6 +242,16 @@ bool BlockAssembler::TestPackageTransactions(const CTxMemPool::setEntries& packa
         if (failedTxs.count(it) > 0) {
             return false;
         }
+        // Rincoin RIN3: belt-and-suspenders skip.
+        // Mempool should block these at entry, but guard CreateNewBlock
+        // from throwing if a legacy-nVersion tx somehow enters mempool.
+        // Coinbase/HogEx are never in mempool; only MWEBOnly needs exemption.
+        if (nHeight >= chainparams.GetConsensus().nRinHashForkHeight) {
+            const CTransaction& tx = it->GetTx();
+            if (!tx.IsMWEBOnly() && tx.nVersion != CTransaction::RIN_FORK_TX_VERSION) {
+                return false;
+            }
+        }
     }
     return true;
 }

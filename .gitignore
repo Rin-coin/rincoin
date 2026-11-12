@@ -95,6 +95,8 @@ src/qt/bitcoin-qt.includes
 *.qm
 Makefile
 !depends/Makefile
+# hand-written release-build wrapper (not autotools-generated)
+!contrib/release/Makefile
 src/qt/rincoin-qt
 rincoin-Qt.app
 background.tiff*
@@ -118,6 +120,9 @@ releases
 # Build cache and release builds
 .build-cache/
 release-builds/
+# contrib/release/ Makefile output: staging (RELEASE) + artifacts (OUTDIR)
+/release/
+/release-artifacts/
 
 #lcov
 *.gcno
@@ -155,3 +160,7 @@ osx_volname
 dist/
 *.background.tiff
 /tmp
+
+#Claude
+.claude
+settings.json

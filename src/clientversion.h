@@ -14,6 +14,12 @@
 #error Client version information missing: version is not defined by bitcoin-config.h or in any other way
 #endif
 
+// RIP-0001 version mapping:
+//   CLIENT_VERSION_MAJOR    = GENERATION (current: 1, ~400yr PoR epoch)
+//   CLIENT_VERSION_MINOR    = MAJOR      (protocol upgrade)
+//   CLIENT_VERSION_REVISION = MINOR      (maintenance/bugfix)
+//   CLIENT_VERSION_BUILD    = PATCH      (always 0 in Core)
+
 /**
  * Converts the parameter X to a string after macro replacement on X has been performed.
  * Don't merge these into one macro!

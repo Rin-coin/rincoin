@@ -146,9 +146,9 @@ bool CMessageHeader::IsCommandValid() const
 
 ServiceFlags GetDesirableServiceFlags(ServiceFlags services) {
     if ((services & NODE_NETWORK_LIMITED) && g_initial_block_download_completed) {
-        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS | NODE_MWEB);
+        return ServiceFlags(NODE_NETWORK_LIMITED | NODE_WITNESS | NODE_MWEB | NODE_RIN3);
     }
-    return ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_MWEB);
+    return ServiceFlags(NODE_NETWORK | NODE_WITNESS | NODE_MWEB | NODE_RIN3);
 }
 
 void SetServiceFlagsIBDCache(bool state) {
@@ -222,6 +222,7 @@ static std::string serviceFlagToStr(size_t bit)
     case NODE_COMPACT_FILTERS:   return "COMPACT_FILTERS";
     case NODE_NETWORK_LIMITED:   return "NETWORK_LIMITED";
     case NODE_MWEB:              return "MWEB";
+    case NODE_RIN3:              return "RIN3";
     case NODE_MWEB_LIGHT_CLIENT: return "MWEB_LIGHT_CLIENT";
     // Not using default, so we get warned when a case is missing
     }

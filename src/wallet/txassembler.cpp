@@ -1,5 +1,6 @@
 #include <wallet/txassembler.h>
 
+#include <chainparams.h>
 #include <consensus/tx_check.h>
 #include <consensus/validation.h>
 #include <policy/policy.h>
@@ -106,6 +107,15 @@ void TxAssembler::CreateTransaction_Locked(
     AssertLockHeld(m_wallet.cs_wallet);
 
     new_tx.tx.nLockTime = GetLocktimeForNewTransaction();
+
+    // Rincoin RIN3 fork: switch to RIN_FORK_TX_VERSION one block early to
+    // avoid race condition where the tx lands in the activation block itself.
+    // Use m_wallet.GetLastBlockHeight() — NOT ::ChainActive().Height() —
+    // to avoid acquiring cs_main while cs_wallet is held (lock-order reversal).
+    const int last_height = m_wallet.GetLastBlockHeight();
+    if (last_height >= Params().GetConsensus().nRinHashForkHeight - 1) {
+        new_tx.tx.nVersion = CTransaction::RIN_FORK_TX_VERSION;
+    }
 
     m_wallet.AvailableCoins(new_tx.available_coins, true, &new_tx.coin_control, 1, MAX_MONEY, MAX_MONEY, 0);
     UpdateChangeAddress(new_tx);
@@ -237,7 +247,7 @@ void TxAssembler::VerifyRecipients(const std::vector<CRecipient>& recipients)
             throw CreateTxError(_("Only one MWEB recipient supported at this time"));
         }
 
-        
+
         nValue += recipient.nAmount;
         if (nValue < 0 || recipient.nAmount < 0) {
             throw CreateTxError(_("Transaction amounts must not be negative"));

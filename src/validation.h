@@ -199,13 +199,15 @@ bool ActivateBestChain(BlockValidationState& state, const CChainParams& chainpar
 
 /**
  * Make the provided index the tip of the chain, regardless of the amount of work.
- * 
+ *
  * Unlike ActivateBestChain, this only updates the provided coins view, not the active chain state.
  * No calls to any validationinterface callbacks will be made.
  */
 bool ActivateArbitraryChain(BlockValidationState& state, CCoinsViewCache& view, const CChainParams& chainparams, CBlockIndex* pindex) EXCLUSIVE_LOCKS_REQUIRED(cs_main);
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params& consensusParams);
+CAmount GetSupplyCap(const Consensus::Params& consensusParams);
+CAmount GetTotalSubsidy(int nHeight, const Consensus::Params& consensusParams);
 
 /** Guess verification progress (as a fraction between 0.0=genesis and 1.0=current tip). */
 double GuessVerificationProgress(const ChainTxData& data, const CBlockIndex* pindex);

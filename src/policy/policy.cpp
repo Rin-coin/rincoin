@@ -11,6 +11,7 @@
 #include <mweb/mweb_policy.h>
 #include <coins.h>
 #include <span.h>
+#include <primitives/transaction.h>
 
 CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
 {
@@ -76,7 +77,10 @@ bool IsStandard(const CScript& scriptPubKey, TxoutType& whichType)
 
 bool IsStandardTx(const CTransaction& tx, bool permit_bare_multisig, const CFeeRate& dust_relay_fee, std::string& reason)
 {
-    if (tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1) {
+    // Rincoin RIN3 fork: also permit RIN_FORK_TX_VERSION as a valid standard version
+    // for replay-protected transactions after the activation height.
+    if ((tx.nVersion > CTransaction::MAX_STANDARD_VERSION || tx.nVersion < 1)
+        && tx.nVersion != CTransaction::RIN_FORK_TX_VERSION) {
         reason = "version";
         return false;
     }

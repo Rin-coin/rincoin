@@ -2,6 +2,7 @@
 # Copyright (c) 2010 ArtForz -- public domain half-a-node
 # Copyright (c) 2012 Jeff Garzik
 # Copyright (c) 2010-2020 The Bitcoin Core developers
+# Copyright (c) 2024-2025 The Rincoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Bitcoin test framework primitive and message structures
@@ -29,7 +30,25 @@ import socket
 import struct
 import time
 
-import litecoin_scrypt
+# RinHash: BLAKE3 -> Argon2d -> SHA3-256 (replaces litecoin_scrypt)
+import hashlib as _hashlib
+import blake3 as _blake3
+from argon2.low_level import hash_secret_raw as _argon2_raw, Type as _Argon2Type
+
+def rinhash(header_bytes: bytes) -> bytes:
+    """Pure-Python RinHash: matches rinhash.cpp (BLAKE3 -> Argon2d -> SHA3-256)."""
+    b3 = _blake3.blake3(header_bytes).digest()
+    a2 = _argon2_raw(
+        secret=b3,
+        salt=b"RinCoinSalt",
+        time_cost=2,
+        memory_cost=64,
+        parallelism=1,
+        hash_len=32,
+        type=_Argon2Type.D,
+    )
+    return _hashlib.sha3_256(a2).digest()
+
 from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, assert_equal
 
@@ -60,6 +79,7 @@ NODE_COMPACT_FILTERS = (1 << 6)
 NODE_NETWORK_LIMITED = (1 << 10)
 NODE_MWEB_LIGHT_CLIENT = (1 << 23)
 NODE_MWEB = (1 << 24)
+NODE_RIN3 = (1 << 25)
 
 MSG_TX = 1
 MSG_BLOCK = 2
@@ -158,7 +178,7 @@ def ser_fixed_bytes(u, size):
         #rs += struct.pack("B", u & 0xFF)
         #u >>= 8
     return rs
-    
+
 
 def deser_pubkey(f):
     r = 0
@@ -173,7 +193,7 @@ def ser_pubkey(u):
         rs += struct.pack("B", u & 0xFF)
         u >>= 8
     return rs
-    
+
 
 def deser_signature(f):
     r = 0
@@ -188,7 +208,7 @@ def ser_signature(u):
         rs += struct.pack("B", u & 0xFF)
         u >>= 8
     return rs
-        
+
 
 
 # deser_function_name: Allow for an alternate deserialization function on the
@@ -629,7 +649,7 @@ class CTransaction:
         r += struct.pack("<I", self.nLockTime)
         return r
 
-    
+
     # Only serialize with mweb when explicitly called for
     def serialize_with_mweb(self):
         flags = 0
@@ -703,7 +723,7 @@ class CTransaction:
 
 class CBlockHeader:
     __slots__ = ("hash", "hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
-                 "nTime", "nVersion", "sha256", "scrypt256")
+                 "nTime", "nVersion", "sha256", "rinhash256")
 
     def __init__(self, header=None):
         if header is None:
@@ -717,7 +737,7 @@ class CBlockHeader:
             self.nNonce = header.nNonce
             self.sha256 = header.sha256
             self.hash = header.hash
-            self.scrypt256 = header.scrypt256
+            self.rinhash256 = header.rinhash256
             self.calc_sha256()
 
     def set_null(self):
@@ -729,7 +749,7 @@ class CBlockHeader:
         self.nNonce = 0
         self.sha256 = None
         self.hash = None
-        self.scrypt256 = None
+        self.rinhash256 = None
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -740,7 +760,7 @@ class CBlockHeader:
         self.nNonce = struct.unpack("<I", f.read(4))[0]
         self.sha256 = None
         self.hash = None
-        self.scrypt256 = None
+        self.rinhash256 = None
 
     def serialize(self):
         r = b""
@@ -763,11 +783,11 @@ class CBlockHeader:
             r += struct.pack("<I", self.nNonce)
             self.sha256 = uint256_from_str(hash256(r))
             self.hash = encode(hash256(r)[::-1], 'hex_codec').decode('ascii')
-            self.scrypt256 = uint256_from_str(litecoin_scrypt.getPoWHash(r))
+            self.rinhash256 = uint256_from_str(rinhash(r))
 
     def rehash(self):
         self.sha256 = None
-        self.scrypt256 = None
+        self.rinhash256 = None
         self.calc_sha256()
         return self.sha256
 
@@ -807,7 +827,7 @@ class CBlock(CBlockHeader):
             r += ser_vector(self.vtx, "serialize_with_witness")
         else:
             r += ser_vector(self.vtx, "serialize_without_witness")
-        
+
         return r
 
     # Calculate the merkle root given a vector of transaction hashes
@@ -842,7 +862,7 @@ class CBlock(CBlockHeader):
     def is_valid(self):
         self.calc_sha256()
         target = uint256_from_compact(self.nBits)
-        if self.scrypt256 > target:
+        if self.rinhash256 > target:
             return False
         for tx in self.vtx:
             if not tx.is_valid():
@@ -854,7 +874,7 @@ class CBlock(CBlockHeader):
     def solve(self):
         self.rehash()
         target = uint256_from_compact(self.nBits)
-        while self.scrypt256 > target:
+        while self.rinhash256 > target:
             self.nNonce += 1
             self.rehash()
 
@@ -924,10 +944,10 @@ class P2PHeaderAndShortIDs:
             self.shortids.append(struct.unpack("<Q", f.read(6) + b'\x00\x00')[0])
         self.prefilled_txn = deser_vector(f, PrefilledTransaction)
         self.prefilled_txn_length = len(self.prefilled_txn)
-        
+
         if len(self.prefilled_txn) > 0 and self.prefilled_txn[-1].tx.hogex:
             self.mweb_block = deser_mweb_block(f)
-                
+
     # When using version 2 compact blocks, we must serialize with_witness.
     # When using version 3 compact blocks, we must serialize with_mweb.
     def serialize(self, version=1):
@@ -1415,7 +1435,7 @@ class msg_no_witness_block(msg_block):
     __slots__ = ()
     def serialize(self):
         return self.block.serialize(with_witness=False, with_mweb=False)
-    
+
 class msg_no_mweb_block(msg_block):
     __slots__ = ()
     def serialize(self):
@@ -1935,7 +1955,7 @@ class Hash:
 
     def __init__(self, val = 0):
         self.val = val
-        
+
     @classmethod
     def from_hex(cls, hex_str):
         return cls(int(hex_str, 16))
@@ -1943,11 +1963,11 @@ class Hash:
     @classmethod
     def from_rev_hex(cls, hex_str):
         return cls(int(hex_reverse(hex_str), 16))
-        
+
     @classmethod
     def from_byte_arr(cls, b):
         return cls(deser_uint256(BytesIO(b)))
-    
+
     def to_hex(self):
         return self.serialize().hex()
 
@@ -1993,7 +2013,7 @@ def ser_varint(n):
 
 def deser_varint(f):
     n = 0;
-    while True: 
+    while True:
         chData = struct.unpack("B", f.read(1))[0]
         n = (n << 7) | (chData & 0x7F)
         if chData & 0x80:
@@ -2031,7 +2051,7 @@ def deser_mweb_tx(f):
         return mweb_tx.deserialize(f)
     else:
         return None
-        
+
 
 class MWEBInput:
     __slots__ = ("features", "output_id", "commitment", "input_pubkey",
@@ -2073,7 +2093,7 @@ class MWEBInput:
             r += ser_fixed_bytes(self.extradata, len(self.extradata))
         r += ser_signature(self.signature)
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2115,7 +2135,7 @@ class MWEBOutputMessage:
             r += ser_compact_size(len(self.extradata))
             r += ser_fixed_bytes(self.extradata, len(self.extradata))
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2151,7 +2171,7 @@ class MWEBOutput:
         r += ser_fixed_bytes(self.proof, 675)
         r += ser_signature(self.signature)
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2250,7 +2270,7 @@ class MWEBKernel:
         r += ser_pubkey(self.excess)
         r += ser_signature(self.signature)
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2303,7 +2323,7 @@ class MWEBTransaction:
         r += self.stealth_offset.serialize()
         r += self.body.serialize()
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2359,7 +2379,7 @@ class MWEBHeader:
         r += ser_varint(self.num_txos)
         r += ser_varint(self.num_kernels)
         return r
-    
+
     def rehash(self):
         self.hash = blake3(self.serialize())
         return self.hash.to_hex()
@@ -2388,7 +2408,7 @@ class MWEBBlock:
         r += self.header.serialize()
         r += self.body.serialize()
         return r
-    
+
     def rehash(self):
         return self.header.rehash()
 

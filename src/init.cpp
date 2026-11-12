@@ -903,7 +903,7 @@ namespace { // Variables internal to initialization process only
 int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
-ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
+ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED | NODE_RIN3);
 int64_t peer_connect_timeout;
 std::set<BlockFilterType> g_enabled_filter_types;
 
@@ -1387,7 +1387,7 @@ bool AppInitMain(const util::Ref& context, NodeContext& node, interfaces::BlockA
         if (!AppInitServers(context, node))
             return InitError(_("Unable to start HTTP server. See debug log for details."));
     }
-    
+
 #if defined(USE_SSE2)
     std::string sse2detect = scrypt_detect_sse2();
     LogPrintf("%s\n", sse2detect);

@@ -2111,7 +2111,7 @@ void PeerManager::ProcessHeadersMessage(CNode& pfrom, const std::vector<CBlockHe
         PrecomputeHeaderHashes(headers, precomputed_hashes, precomputed_pow_hashes);
         auto t_precompute_end = std::chrono::steady_clock::now();
         int64_t precompute_us = std::chrono::duration_cast<std::chrono::microseconds>(t_precompute_end - t_precompute).count();
-        LogPrintf("HEADERSYNC-PERF: precompute=%d hdrs, %lldus (%lldus/hdr) using %u threads\n",
+        LogPrint(BCLog::BENCH, "HEADERSYNC-PERF: precompute=%d hdrs, %lldus (%lldus/hdr) using %u threads\n",
                   (int)headers.size(), precompute_us,
                   (headers.size() > 0 ? precompute_us / (int64_t)headers.size() : 0),
                   std::max(1u, (unsigned int)std::thread::hardware_concurrency()));

@@ -1,1 +1,67 @@
+# rincoin: enforce LF for all text files
+* text=auto eol=lf
+
+# C / C++ source
+*.c   text eol=lf
+*.cc  text eol=lf
+*.cpp text eol=lf
+*.h   text eol=lf
+*.hpp text eol=lf
+
+# Perl
+*.pl  text eol=lf
+
+# Build system
+configure  text eol=lf
+Makefile   text eol=lf
+*.ac       text eol=lf
+*.am       text eol=lf
+*.mk       text eol=lf
+*.in       text eol=lf
+
+# Scripts
+*.sh  text eol=lf
+
+# Python (functional test suite)
+*.py  text eol=lf
+
+# Qt UI / resources
+*.ui  text eol=lf
+*.qrc text eol=lf
+*.qss text eol=lf
+
+# Windows resources
+*.rc  text eol=lf
+
+# Man pages
+*.1   text eol=lf
+
+# Documentation / config
+*.md       text eol=lf
+*.txt      text eol=lf
+*.rst      text eol=lf
+*.json     text eol=lf
+*.yml      text eol=lf
+*.yaml     text eol=lf
+*.xml      text eol=lf
+COPYING    text eol=lf
+README     text eol=lf
+.gitignore text eol=lf
+
+# SVG (XML-based; kept as text for diff readability)
+*.svg   text eol=lf
+
+# Binary – must not be line-end converted
+*.png   binary
+*.ico   binary
+*.gif   binary
+*.jpg   binary
+*.jpeg  binary
+*.bmp   binary
+*.ttf   binary
+*.otf   binary
+*.woff  binary
+*.woff2 binary
+
+# git archive version substitution (Bitcoin → Litecoin → Rincoin upstream)
 src/clientversion.cpp export-subst
